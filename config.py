@@ -27,20 +27,23 @@ class Settings(BaseSettings):
     """Application settings with explicit defaults"""
     
     # Environment
-    DEBUG: bool = os.getenv("DEBUG", "False").lower() == "true"
+    DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
     API_URL: str = os.getenv("API_URL", "http://localhost:8000")
     FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:5501")  # Match your Live Server port
     
     # MongoDB
-    MONGODB_URL: str = os.getenv("MONGODB_URL", "")
-    DATABASE_NAME: str = os.getenv("DATABASE_NAME", "job_hunter")
+    MONGODB_URI: str = os.getenv(
+        "MONGODB_URI",
+        "mongodb+srv://user:pass@cluster.mongodb.net/jobhunter"
+    )
+    DATABASE_NAME: str = os.getenv("DATABASE_NAME", "jobhunter")
     
     # Google OAuth
     GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID", "")
     GOOGLE_CLIENT_SECRET: str = os.getenv("GOOGLE_CLIENT_SECRET", "")
     
     # JWT
-    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "")
+    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-this")
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 30
@@ -69,14 +72,14 @@ class Settings(BaseSettings):
     CMC_API_KEY: str = os.getenv("CMC_API_KEY", "")
     
     # Telegram
-    TELEGRAM_API_ID: int = Field(default=None, alias="TELEGRAM_API_ID")
-    TELEGRAM_API_HASH: str = Field(default=None, alias="TELEGRAM_API_HASH")
-    TELEGRAM_PHONE: str = Field(default=None, alias="TELEGRAM_PHONE")
+    TELEGRAM_API_ID: int = int(os.getenv("TELEGRAM_API_ID", "0"))
+    TELEGRAM_API_HASH: str = os.getenv("TELEGRAM_API_HASH", "")
+    TELEGRAM_PHONE: str = os.getenv("TELEGRAM_PHONE", "")
     
     # CORS
-    ALLOWED_ORIGINS: List[str] = [
-        "http://localhost:3000",
-        "https://your-frontend.vercel.app"
+    ALLOWED_ORIGINS: list = [
+        os.getenv("FRONTEND_URL", "https://your-frontend.vercel.app"),
+        "https://your-app.railway.app"
     ]
     
     class Config:
@@ -300,8 +303,8 @@ def validate_settings():
     """Validate critical settings are configured"""
     errors = []
     
-    if not settings.MONGODB_URL:
-        errors.append("MONGODB_URL is not set")
+    if not settings.MONGODB_URI:
+        errors.append("MONGODB_URI is not set")
     if not settings.JWT_SECRET_KEY:
         errors.append("JWT_SECRET_KEY is not set")
     if not settings.GOOGLE_CLIENT_ID:

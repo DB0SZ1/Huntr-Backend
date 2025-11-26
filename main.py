@@ -1,6 +1,6 @@
 """
 FastAPI Application Entry Point
-Multi-Tenant Job Hunter Backend - UPDATED
+Multi-Tenant Job Hunter Backend - RENDER OPTIMIZED
 Added: Admin Dashboard, Monitoring, Reports, Scan, Dashboard modules
 """
 from fastapi import FastAPI, Request, status
@@ -15,6 +15,7 @@ import os
 from config import settings
 from app.database.connection import connect_to_mongo, close_mongo_connection
 from app.scheduler.tasks import start_scheduler, shutdown_scheduler
+from app.monitoring.keep_alive import KeepAliveService
 
 # Import all routers
 from app.auth.oauth import router as auth_router
@@ -80,12 +81,14 @@ def setup_logging():
 logger = setup_logging()
 
 
+keep_alive_service = None
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan manager"""
     # Startup
     logger.info("=" * 60)
-    logger.info("Starting Multi-Tenant Job Hunter Backend (v2.1)...")
+    logger.info("Starting Multi-Tenant Job Hunter Backend (v2.1 - Render Optimized)...")
     logger.info("=" * 60)
     
     connection_success = False
@@ -124,6 +127,15 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.error(f"[WARN] Scheduler start failed: {str(e)}")
     
+    # NEW: Start keep-alive service for Render free tier
+    try:
+        global keep_alive_service
+        keep_alive_service = KeepAliveService(settings.API_URL)
+        await keep_alive_service.start()
+        logger.info("[OK] Keep-alive service started (Render optimization)")
+    except Exception as e:
+        logger.error(f"[WARN] Keep-alive service failed: {str(e)}")
+    
     logger.info("=" * 60)
     logger.info("Application startup complete!")
     logger.info("=" * 60)
@@ -135,6 +147,11 @@ async def lifespan(app: FastAPI):
     logger.info("Shutting down application...")
     logger.info("=" * 60)
     shutdown_scheduler()
+    
+    # NEW: Stop keep-alive service
+    if keep_alive_service:
+        await keep_alive_service.stop()
+    
     await close_mongo_connection()
     logger.info("[OK] Cleanup complete")
 
@@ -360,6 +377,8 @@ async def check_database_health():
 if __name__ == "__main__":
     import uvicorn
     
+    port = int(os.getenv("PORT", 8000))
+    
     logger.info("="*60)
     logger.info("Starting Uvicorn Server...")
     logger.info(f"Debug Mode: {settings.DEBUG}")
@@ -369,7 +388,7 @@ if __name__ == "__main__":
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=8000,
+        port=port,  # ← Use PORT env var from Render
         reload=settings.DEBUG,
         log_level="info"
     )
