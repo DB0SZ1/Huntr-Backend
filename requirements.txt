@@ -1,53 +1,53 @@
 # Core FastAPI
-fastapi==0.115.0
-uvicorn[standard]==0.32.0
-pydantic==2.10.3
-pydantic-settings==2.6.1
-starlette==0.41.3
-cryptography==44.0.0
-psutil==6.1.0
-passlib[bcrypt]==1.7.4
-PyPDF2==3.0.1
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+starlette
+cryptography
+psutil
+passlib[bcrypt]
+PyPDF2
 
 # Database
-motor==3.6.0  # Async MongoDB driver
-pymongo==4.10.1
+motor
+pymongo
 
 # Authentication
-python-jose[cryptography]==3.3.0
-authlib==1.3.2
-python-multipart==0.0.20
-dnspython==2.7.0
+python-jose[cryptography]
+authlib
+python-multipart
+dnspython
 
 # HTTP Client
-httpx==0.28.1
-requests==2.32.3
+httpx
+requests
 
 # Background Jobs
-APScheduler==3.10.4
+APScheduler
 
 # WhatsApp (Twilio)
-twilio==9.3.7
+twilio
 
 # Email
-aiosmtplib==3.0.2
-jinja2==3.1.4
+aiosmtplib
+jinja2
 
 # Real Scrapers
-telethon==1.37.0  # For Telegram scraping (200+ channels)
-beautifulsoup4==4.12.3  # For parsing HTML
-lxml==5.3.0  # For efficient XML parsing
+telethon
+beautifulsoup4
+lxml
 
 # Utilities
-python-dotenv==1.0.1
-colorama==0.4.6  # For colored terminal output
+python-dotenv
+colorama
 
 # Render optimization
-fastapi-cache2[redis]==0.2.2
-redis==5.2.0
+fastapi-cache2[redis]
+redis
 
 # Monitoring
-prometheus-client==0.21.0
+prometheus-client
 
 # Gunicorn for Render
-gunicorn==23.0.0
+gunicorn
