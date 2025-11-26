@@ -2,6 +2,7 @@ services:
   - type: web
     name: huntr-backend
     env: python
+    pythonVersion: "3.11.4"
     buildCommand: "pip install -r requirements.txt"
     startCommand: "gunicorn main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000"
     envVars:
@@ -12,8 +13,7 @@ services:
           name: huntr-backend
           property: url
 
-  # Add Redis addon for caching
   - type: redis
     name: job-hunter-cache
     plan: free
-    region: oregon  # Change to your region
+    region: oregon
