@@ -8,6 +8,7 @@ cryptography
 psutil
 passlib[bcrypt]
 PyPDF2
+itsdangerous
 
 # Database
 motor
