@@ -1,6 +1,6 @@
 """
 Application Configuration & Tier Limits
-FIXED: Explicit .env loading for Windows compatibility
+OPTIMIZED: Render-compatible environment variable handling
 """
 from pydantic_settings import BaseSettings
 from pydantic import Field
@@ -10,85 +10,88 @@ import os
 from pathlib import Path
 from dotenv import load_dotenv
 
-# CRITICAL FIX: Explicitly load .env file
-# Get the project root directory
-BASE_DIR = Path(__file__).resolve().parent
-ENV_FILE = BASE_DIR / ".env"
-
-# Force load .env file
-if ENV_FILE.exists():
-    load_dotenv(ENV_FILE, override=True)
-    print(f"✅ Loaded .env from: {ENV_FILE}")
+# Load .env only in development (not on Render)
+if os.getenv("RENDER") != "true":  # Render sets this automatically
+    BASE_DIR = Path(__file__).resolve().parent
+    ENV_FILE = BASE_DIR / ".env"
+    if ENV_FILE.exists():
+        load_dotenv(ENV_FILE, override=True)
+        print(f"✅ Loaded .env from: {ENV_FILE}")
+    else:
+        print(f"⚠️  .env file not found at: {ENV_FILE}")
 else:
-    print(f"⚠️  .env file not found at: {ENV_FILE}")
+    print("✅ Running on Render - using environment variables")
 
 
 class Settings(BaseSettings):
     """Application settings with explicit defaults"""
     
     # Environment
-    DEBUG: bool = os.getenv("DEBUG", "false").lower() == "true"
-    API_URL: str = os.getenv("API_URL", "http://localhost:8000")
-    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:5501")  # Match your Live Server port
+    DEBUG: bool = Field(default=False, validation_alias="DEBUG")
+    API_URL: str = Field(default="http://localhost:8000", validation_alias="API_URL")
+    FRONTEND_URL: str = Field(default="http://localhost:5501", validation_alias="FRONTEND_URL")
     
     # MongoDB
-    MONGODB_URI: str = os.getenv(
-        "MONGODB_URI",
-        "mongodb+srv://user:pass@cluster.mongodb.net/jobhunter"
+    MONGODB_URI: str = Field(
+        default="mongodb+srv://user:pass@cluster.mongodb.net/jobhunter",
+        validation_alias="MONGODB_URI"
     )
-    DATABASE_NAME: str = os.getenv("DATABASE_NAME", "jobhunter")
+    DATABASE_NAME: str = Field(default="jobhunter", validation_alias="DATABASE_NAME")
     
     # Google OAuth
-    GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID", "")
-    GOOGLE_CLIENT_SECRET: str = os.getenv("GOOGLE_CLIENT_SECRET", "")
+    GOOGLE_CLIENT_ID: str = Field(default="", validation_alias="GOOGLE_CLIENT_ID")
+    GOOGLE_CLIENT_SECRET: str = Field(default="", validation_alias="GOOGLE_CLIENT_SECRET")
     
     # JWT
-    JWT_SECRET_KEY: str = os.getenv("JWT_SECRET_KEY", "your-secret-key-change-this")
+    JWT_SECRET_KEY: str = Field(default="your-secret-key-change-this", validation_alias="JWT_SECRET_KEY")
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 30
     
     # Encryption (for user's Twilio credentials)
-    ENCRYPTION_KEY: str = os.getenv("ENCRYPTION_KEY", "")
+    ENCRYPTION_KEY: str = Field(default="", validation_alias="ENCRYPTION_KEY")
     
     # Paystack
-    PAYSTACK_SECRET_KEY: str = os.getenv("PAYSTACK_SECRET_KEY", "")
-    PAYSTACK_PUBLIC_KEY: str = os.getenv("PAYSTACK_PUBLIC_KEY", "")
-    PAYSTACK_WEBHOOK_SECRET: str = os.getenv("PAYSTACK_WEBHOOK_SECRET", "")
+    PAYSTACK_SECRET_KEY: str = Field(default="", validation_alias="PAYSTACK_SECRET_KEY")
+    PAYSTACK_PUBLIC_KEY: str = Field(default="", validation_alias="PAYSTACK_PUBLIC_KEY")
+    PAYSTACK_WEBHOOK_SECRET: str = Field(default="", validation_alias="PAYSTACK_WEBHOOK_SECRET")
     
     # Gmail SMTP
-    SMTP_USERNAME: str = os.getenv("SMTP_USERNAME", "")
-    SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
+    SMTP_USERNAME: str = Field(default="", validation_alias="SMTP_USERNAME")
+    SMTP_PASSWORD: str = Field(default="", validation_alias="SMTP_PASSWORD")
     SMTP_SERVER: str = "smtp.gmail.com"
     SMTP_PORT: int = 587
     
     # OpenRouter AI
-    OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
+    OPENROUTER_API_KEY: str = Field(default="", validation_alias="OPENROUTER_API_KEY")
     
     # Twitter API
-    TWITTER_BEARER_TOKEN: str = os.getenv("TWITTER_BEARER_TOKEN", "")
+    TWITTER_BEARER_TOKEN: str = Field(default="", validation_alias="TWITTER_BEARER_TOKEN")
     
     # CoinMarketCap
-    CMC_API_KEY: str = os.getenv("CMC_API_KEY", "")
+    CMC_API_KEY: str = Field(default="", validation_alias="CMC_API_KEY")
     
     # Telegram
-    TELEGRAM_API_ID: int = int(os.getenv("TELEGRAM_API_ID", "0"))
-    TELEGRAM_API_HASH: str = os.getenv("TELEGRAM_API_HASH", "")
-    TELEGRAM_PHONE: str = os.getenv("TELEGRAM_PHONE", "")
+    TELEGRAM_API_ID: int = Field(default=0, validation_alias="TELEGRAM_API_ID")
+    TELEGRAM_API_HASH: str = Field(default="", validation_alias="TELEGRAM_API_HASH")
+    TELEGRAM_PHONE: str = Field(default="", validation_alias="TELEGRAM_PHONE")
     
-    # CORS
-    ALLOWED_ORIGINS: list = [
-        os.getenv("FRONTEND_URL", "https://your-frontend.vercel.app"),
-        "https://your-app.railway.app"
-    ]
+    # CORS - dynamically set based on environment
+    @property
+    def ALLOWED_ORIGINS(self) -> List[str]:
+        if self.DEBUG:
+            return ["*"]
+        origins = [self.FRONTEND_URL]
+        if self.API_URL:
+            origins.append(self.API_URL)
+        return origins
     
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = True
-        # Allow population by field name
         populate_by_name = True
-        extra = "ignore"  # Ignore extra fields
+        extra = "ignore"
     
     def __init__(self, **data):
         super().__init__(**data)
@@ -101,12 +104,12 @@ class Settings(BaseSettings):
             print(f"[CONFIG] Telegram Phone loaded: {self.TELEGRAM_PHONE}")
 
 
-# UPDATED TIER LIMITS with new features
+# TIER LIMITS (unchanged)
 TIER_LIMITS = {
     "free": {
         "max_niches": 1,
-        "scans_per_day": 2,  # ← NEW: 2 scans per day
-        "curated_gigs_per_scan": 3,  # ← NEW: 3 curated gigs per scan
+        "scans_per_day": 2,
+        "curated_gigs_per_scan": 3,
         "scan_interval_minutes": 0,
         "auto_scan_enabled": False,
         "monthly_opportunities_limit": 50,
@@ -127,8 +130,8 @@ TIER_LIMITS = {
     },
     "pro": {
         "max_niches": 5,
-        "scans_per_day": 5,  # ← NEW: 5 scans per day
-        "curated_gigs_per_scan": 4,  # ← NEW: 4 curated gigs per scan
+        "scans_per_day": 5,
+        "curated_gigs_per_scan": 4,
         "scan_interval_minutes": 90,
         "auto_scan_enabled": True,
         "monthly_opportunities_limit": 500,
@@ -151,8 +154,8 @@ TIER_LIMITS = {
     },
     "premium": {
         "max_niches": 20,
-        "scans_per_day": 10,  # ← NEW: 10 scans per day
-        "curated_gigs_per_scan": 5,  # ← NEW: 5 curated gigs per scan
+        "scans_per_day": 10,
+        "curated_gigs_per_scan": 5,
         "scan_interval_minutes": 30,
         "auto_scan_enabled": True,
         "monthly_opportunities_limit": 5000,
@@ -178,7 +181,7 @@ TIER_LIMITS = {
     }
 }
 
-# Scam detection keywords
+# Scam detection keywords (unchanged)
 SCAM_INDICATORS = {
     "comment_based": [
         "comment done", "comment interested", "comment hi", "reply done",
@@ -198,7 +201,7 @@ SCAM_INDICATORS = {
     ]
 }
 
-# Salary detection patterns
+# Salary detection patterns (unchanged)
 SALARY_PATTERNS = {
     "hourly": [
         r"\$\d+/hr", r"₦\d+/hour", r"\d+k/hour", r"\$\d+-\$\d+/hour"
@@ -211,16 +214,12 @@ SALARY_PATTERNS = {
     ]
 }
 
-
-# Credit costs
 CREDIT_COSTS = {
-    "scan": 5,  # Each scan costs 5 credits
-    "ai_analysis": 2,  # AI analysis costs 2 credits
-    "export": 1,  # Export costs 1 credit
+    "scan": 5,
+    "ai_analysis": 2,
+    "export": 1,
 }
 
-
-# Platform configurations
 PLATFORM_CONFIGS = {
     'Twitter/X': {
         'enabled': True,
@@ -264,8 +263,6 @@ PLATFORM_CONFIGS = {
     }
 }
 
-
-# AI matching configuration
 AI_MATCHING_CONFIG = {
     'min_confidence_threshold': 60,
     'timeout_seconds': 30,
@@ -273,8 +270,6 @@ AI_MATCHING_CONFIG = {
     'fallback_to_keywords': True
 }
 
-
-# Notification settings
 NOTIFICATION_CONFIG = {
     'whatsapp': {
         'enabled': True,
@@ -295,18 +290,17 @@ def get_settings() -> Settings:
     return Settings()
 
 
-# Create global settings instance
 settings = get_settings()
 
-# Validation check
+
 def validate_settings():
     """Validate critical settings are configured"""
     errors = []
     
-    if not settings.MONGODB_URI:
-        errors.append("MONGODB_URI is not set")
-    if not settings.JWT_SECRET_KEY:
-        errors.append("JWT_SECRET_KEY is not set")
+    if not settings.MONGODB_URI or settings.MONGODB_URI == "mongodb+srv://user:pass@cluster.mongodb.net/jobhunter":
+        errors.append("MONGODB_URI is not properly configured")
+    if not settings.JWT_SECRET_KEY or settings.JWT_SECRET_KEY == "your-secret-key-change-this":
+        errors.append("JWT_SECRET_KEY is not set or using default")
     if not settings.GOOGLE_CLIENT_ID:
         errors.append("GOOGLE_CLIENT_ID is not set")
     if not settings.OPENROUTER_API_KEY:
@@ -322,7 +316,7 @@ def validate_settings():
     
     return len(errors) == 0
 
-# Add key validation
+
 def validate_paystack_keys():
     """Validate Paystack configuration"""
     secret = settings.PAYSTACK_SECRET_KEY
@@ -332,31 +326,29 @@ def validate_paystack_keys():
     print("PAYSTACK CONFIGURATION CHECK")
     print("="*60)
     
-    # Check secret key
     if not secret:
-        print("❌ PAYSTACK_SECRET_KEY not set in .env")
+        print("❌ PAYSTACK_SECRET_KEY not set")
     elif secret.startswith('sk_test_'):
-        print(f"✅ Paystack Secret Key: TEST KEY (correct)")
+        print(f"✅ Paystack Secret Key: TEST KEY")
     elif secret.startswith('sk_live_'):
-        print(f"⚠️  Paystack Secret Key: LIVE KEY (for production only!)")
+        print(f"⚠️  Paystack Secret Key: LIVE KEY")
     else:
         print(f"❌ Paystack Secret Key: INVALID FORMAT")
-        print(f"   Expected: sk_test_xxx or sk_live_xxx")
-        print(f"   Got: {secret[:30]}...")
     
-    # Check public key
     if not public:
-        print("❌ PAYSTACK_PUBLIC_KEY not set in .env")
+        print("❌ PAYSTACK_PUBLIC_KEY not set")
     elif public.startswith('pk_test_'):
-        print(f"✅ Paystack Public Key: TEST KEY (correct)")
+        print(f"✅ Paystack Public Key: TEST KEY")
     elif public.startswith('pk_live_'):
-        print(f"⚠️  Paystack Public Key: LIVE KEY (for production only!)")
+        print(f"⚠️  Paystack Public Key: LIVE KEY")
     else:
         print(f"❌ Paystack Public Key: INVALID FORMAT")
     
     print("="*60 + "\n")
 
-# Auto-validate on import
-if __name__ != "__main__":
+
+# Auto-validate on import (only in non-test environments)
+if __name__ != "__main__" and os.getenv("PYTEST_CURRENT_TEST") is None:
     validate_settings()
-    validate_paystack_keys()  # ← Add this
+    if settings.PAYSTACK_SECRET_KEY:  # Only validate if keys are set
+        validate_paystack_keys()
