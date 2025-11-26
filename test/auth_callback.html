@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authentication - Niche Finder</title>
+    <link rel="stylesheet" href="assets/css/auth.css">
+    <style>
+        /* Additional styles specific to callback page */
+        .callback-container {
+            text-align: center;
+        }
+
+        .spinner {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 32px;
+            position: relative;
+        }
+
+        .spinner::before {
+            content: '';
+            box-sizing: border-box;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 80px;
+            height: 80px;
+            margin-top: -40px;
+            margin-left: -40px;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-top-color: rgba(255, 255, 255, 0.8);
+            animation: spinner 0.8s linear infinite;
+        }
+
+        @keyframes spinner {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-icon {
+            font-size: 80px;
+            margin-bottom: 24px;
+            animation: scale-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes scale-in {
+            0% {
+                transform: scale(0);
+                opacity: 0;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .status-icon.success {
+            color: #4ade80;
+        }
+
+        .status-icon.error {
+            color: #f87171;
+        }
+
+        .callback-heading {
+            color: #FFFFFF;
+            font-size: 32px;
+            font-weight: 700;
+            font-family: 'Poppins', sans-serif;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        .callback-message {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 16px;
+            margin-bottom: 32px;
+            line-height: 1.6;
+        }
+
+        .error-details {
+            background: rgba(248, 113, 113, 0.1);
+            border: 1px solid rgba(248, 113, 113, 0.3);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 24px;
+            text-align: left;
+        }
+
+        .error-details p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .retry-button {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            color: #FFFFFF;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 16px;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: 'Poppins', sans-serif;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            margin-top: 24px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        .retry-button:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-3px) scale(1.01);
+            box-shadow: 
+                0 12px 32px rgba(0, 0, 0, 0.6),
+                0 0 24px rgba(255, 255, 255, 0.15);
+        }
+
+        .retry-button:active {
+            transform: translateY(-1px) scale(0.99);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .progress-dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 24px;
+        }
+
+        .progress-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            animation: dot-pulse 1.4s ease-in-out infinite;
+        }
+
+        .progress-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .progress-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes dot-pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 0.3;
+            }
+            50% {
+                transform: scale(1.5);
+                opacity: 1;
+            }
+        }
+
+        #loadingState {
+            display: block;
+        }
+
+        #successState,
+        #errorState {
+            display: none;
+        }
+
+        .show {
+            display: block !important;
+        }
+
+        .hide {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Black Background with White Floating Bubbles -->
+    <div class="auth-background">
+        <div class="bubble bubble-1"></div>
+        <div class="bubble bubble-2"></div>
+    </div>
+
+    <!-- Liquid Glass Container -->
+    <div class="auth-container">
+        <div class="callback-container">
+            <!-- Loading State -->
+            <div id="loadingState">
+                <div class="spinner"></div>
+                <h2 class="callback-heading">Completing Authentication</h2>
+                <p class="callback-message">Please wait while we securely set up your account...</p>
+                <div class="progress-dots">
+                    <div class="progress-dot"></div>
+                    <div class="progress-dot"></div>
+                    <div class="progress-dot"></div>
+                </div>
+            </div>
+
+            <!-- Success State -->
+            <div id="successState">
+                <div class="status-icon success">✓</div>
+                <h2 class="callback-heading">Authentication Successful!</h2>
+                <p class="callback-message">You're all set. Redirecting to your dashboard...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState">
+                <div class="status-icon error">✕</div>
+                <h2 class="callback-heading">Authentication Failed</h2>
+                <p class="callback-message" id="errorMessage">We encountered an issue while authenticating your account.</p>
+                
+                <div class="error-details" id="errorDetails" style="display: none;">
+                    <p id="errorDetailsText"></p>
+                </div>
+
+                <button class="retry-button" onclick="retryAuth()">
+                    Try Again
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Show specific state
+        function showState(state) {
+            document.getElementById('loadingState').classList.remove('show');
+            document.getElementById('successState').classList.remove('show');
+            document.getElementById('errorState').classList.remove('show');
+            
+            document.getElementById('loadingState').classList.add('hide');
+            document.getElementById('successState').classList.add('hide');
+            document.getElementById('errorState').classList.add('hide');
+            
+            document.getElementById(state + 'State').classList.add('show');
+            document.getElementById(state + 'State').classList.remove('hide');
+        }
+
+        async function handleCallback() {
+            try {
+                // Get the query parameters from the URL
+                const urlParams = new URLSearchParams(window.location.search);
+                
+                // Get tokens directly from URL (backend already processed them)
+                const accessToken = urlParams.get('access_token');
+                const refreshToken = urlParams.get('refresh_token');
+                
+                // Check for OAuth errors
+                const error = urlParams.get('error');
+                const errorDescription = urlParams.get('error_description');
+
+                if (error) {
+                    throw new Error(errorDescription || error);
+                }
+
+                // Check if we have tokens
+                if (!accessToken) {
+                    throw new Error('No authentication tokens received. Please try logging in again.');
+                }
+
+                console.log('✅ Tokens received from backend');
+                console.log('Access Token:', accessToken.substring(0, 30) + '...');
+                
+                // Store tokens securely
+                handleSuccessfulAuth(accessToken, refreshToken);
+
+            } catch (error) {
+                console.error('Authentication error:', error);
+                showError(error.message || 'Authentication failed');
+            }
+        }
+
+        function handleSuccessfulAuth(accessToken, refreshToken) {
+            try {
+                // Store tokens in localStorage
+                localStorage.setItem('access_token', accessToken);
+                if (refreshToken) {
+                    localStorage.setItem('refresh_token', refreshToken);
+                }
+
+                // Store authentication timestamp
+                localStorage.setItem('auth_timestamp', Date.now().toString());
+                
+                // Mark as authenticated
+                localStorage.setItem('is_authenticated', 'true');
+
+                console.log('✅ Tokens stored in localStorage');
+
+                // Show success state
+                showState('success');
+
+                // Redirect to dashboard after short delay
+                setTimeout(() => {
+                    console.log('Redirecting to dashboard...');
+                    window.location.href = '/dashboard.html';
+                }, 1500);
+
+            } catch (error) {
+                console.error('Token storage error:', error);
+                showError('Failed to save authentication tokens. Please check your browser settings.');
+            }
+        }
+
+        function showError(message, details = null) {
+            showState('error');
+            
+            document.getElementById('errorMessage').textContent = message;
+            
+            if (details) {
+                document.getElementById('errorDetailsText').textContent = details;
+                document.getElementById('errorDetails').style.display = 'block';
+            }
+            
+            console.error('Error:', message, details);
+        }
+
+        function retryAuth() {
+            // Clear any existing tokens
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            localStorage.removeItem('auth_timestamp');
+            localStorage.removeItem('is_authenticated');
+            
+            // Redirect back to auth page
+            window.location.href = '/auth.html';
+        }
+
+        // Handle browser back button
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted) {
+                // Page was loaded from cache, reload to ensure fresh state
+                window.location.reload();
+            }
+        });
+
+        // Start the callback process when page loads
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', handleCallback);
+        } else {
+            // DOM already loaded
+            handleCallback();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+The error means you've requested too many codes. Telegram is rate-limiting you. Let me fix the auth handler to be more robust:
+
+telegram_auth.py
+telegram_auth.py
+Now update your test script to provide better instructions:
+
+test_telegram_scraper.py
+test_telegram_scraper.py+41-150
+Now create a simple setup guide file:
+
+TELEGRAM_SETUP.md
+TELEGRAM_API_ID=your_api_id
+TELEGRAM_API_HASH=your_api_hash
+TELEGRAM_PHONE=+your_country_phone
+
+# Telegram Scraper Setup Guide
+
+## One-Time Setup (Takes 2 minutes)
+
+### Step 1: Get Your API Credentials
+1. Go to https://my.telegram.org/auth/login
+2. Login with your phone number
+3. Click "API development tools"
+4. Fill in the form and get your API_ID and API_HASH
+
+### Step 2: Add to .env
+
+You'll be asked:
+
+Enter your phone number (shows in prompt)
+Check Telegram for a code
+Enter the code
+That's it! Session is saved automatically.
+
+After Setup
+Everything works automatically - no more manual authentication!
+
+If You Get Rate Limited
+If you see "Returned when all available options..." error:
+
+Wait 1-2 hours (Telegram rate limits auth attempts)
+Run the setup command again
+Enter the code when you get it
+If You Want to Switch Accounts
+Then run the setup command again with a different phone number.
+
+Troubleshooting
+Error	Solution
+"Rate limited"	Wait 1-2 hours, try again
+"Invalid phone"	Make sure it includes country code (+234...)
+"Session not found"	Run authentication setup
+"Wrong code"	Make sure you entered code correctly
+"2FA enabled"	Enter your 2FA password when prompted
+That's all! Your Telegram scraper is ready to go! 🚀
+
+No more manual auth codes needed! 🎉
+
+
+
+
+
+
+
+
+### Step 3: Authenticate Once
+```bash
+python -c "from modules.telegram_auth import ensure_telegram_authenticated; ensure_telegram_authenticated()"

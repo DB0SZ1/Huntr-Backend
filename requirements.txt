@@ -1,0 +1,46 @@
+# Core FastAPI
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+starlette
+cryptography
+psutil
+passlib
+PyPDF2
+
+# Database
+motor # Async MongoDB driver
+pymongo
+
+# Authentication
+python-jose[cryptography]
+authlib
+python-multipart
+dnspython
+
+# Encryption
+cryptography
+
+# HTTP Client
+httpx
+requests
+
+# Background Jobs
+APScheduler
+
+# WhatsApp (Twilio)
+twilio
+
+# Email
+aiosmtplib
+jinja2
+
+# Real Scrapers
+telethon  # For Telegram scraping (200+ channels)
+beautifulsoup4  # For parsing HTML
+lxml  # For efficient XML parsing
+
+# Utilities
+python-dotenv
+colorama  # For colored terminal output

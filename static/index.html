@@ -1,0 +1,26 @@
+<script>
+  async function loadPricingPlans() {
+    try {
+      const response = await fetch('/api/pricing/plans');
+      const data = await response.json();
+      
+      if (data.success) {
+        console.log('Pricing Plans:', data.data);
+        // Render pricing cards here
+        displayPricingCards(data.data);
+      }
+    } catch (error) {
+      console.error('Error loading pricing:', error);
+    }
+  }
+  
+  function displayPricingCards(plans) {
+    // Render plans in your UI
+    Object.entries(plans).forEach(([key, plan]) => {
+      console.log(`${plan.name}: $${plan.price}/${plan.billing_cycle}`);
+    });
+  }
+  
+  // Load on page load
+  document.addEventListener('DOMContentLoaded', loadPricingPlans);
+</script>

@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Niche Finder</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="assets/css/dash.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <script src="assets/js/follow-modal.js"></script>
+        <script src="assets/js/api.js"></script>
+        <script src="assets/js/theme.js"></script>
+   
+</head>
+<body>
+    <!-- Background -->
+    <div class="background">
+        <div class="bubble bubble-1"></div>
+        <div class="bubble bubble-2"></div>
+        <div class="bubble bubble-3"></div>
+    </div>
+
+    <!-- Cursor Glow -->
+    <div class="cursor-glow" id="cursorGlow"></div>
+
+    <!-- Sidebar Overlay -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <!-- Dashboard Layout -->
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-logo">
+                <div class="logo-icon">
+                    <img src="assets/images/project-logo.png" alt="Niche Finder Logo">
+                </div>
+                <span class="sidebar-logo-text">Niche Finder</span>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-filter"></i>
+                    <span>Filters</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-briefcase"></i>
+                    <span>Opportunities</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-history"></i>
+                    <span>History</span>
+                </a>
+                <a href="#" class="nav-item">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+
+            <!-- Upgrade Button / Tier Display -->
+            <button class="upgrade-btn" id="upgradeBtn">
+                <i class="fas fa-crown"></i>
+                <span id="upgradeBtnText">Upgrade to Pro</span>
+            </button>
+
+            <div class="sidebar-user">
+                <div class="user-avatar">JD</div>
+                <div class="user-info">
+                    <div class="user-name">John Doe</div>
+                    <div class="user-email">john@example.com</div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content" id="mainContent">
+            <!-- Top Header -->
+            <header class="top-header" id="topHeader">
+                <div class="header-left">
+                    <button class="menu-toggle" id="menuToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div>
+                        <h1 class="page-title">Dashboard</h1>
+                        <div class="breadcrumb">
+                            <span>Home</span> / Dashboard
+                        </div>
+                    </div>
+                </div>
+
+                <div class="header-center">
+                    <div class="search-bar">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" class="search-input" placeholder="Search opportunities...">
+                    </div>
+                </div>
+
+                <div class="header-right">
+                    <button class="header-icon-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">5</span>
+                    </button>
+                    <button class="header-icon-btn">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                    <div class="header-profile">JD</div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <div class="dashboard-content">
+                <div class="dashboard-grid">
+                    <!-- Stats Card 1 -->
+                    <div class="glass-card stats-card" style="animation-delay: 0s;">
+                        <div class="stats-header">
+                            <div class="stats-icon">
+                                <i class="fas fa-briefcase"></i>
+                            </div>
+                            <div class="stats-trend up">
+                                <i class="fas fa-arrow-up"></i>
+                                12.5%
+                            </div>
+                        </div>
+                        <div class="stats-value">247</div>
+                        <div class="stats-label">Total Opportunities</div>
+                        <div class="stats-description">Found this week</div>
+                    </div>
+
+                    <!-- Stats Card 2 -->
+                    <div class="glass-card stats-card" style="animation-delay: 0.1s;">
+                        <div class="stats-header">
+                            <div class="stats-icon">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stats-trend up">
+                                <i class="fas fa-arrow-up"></i>
+                                8.2%
+                            </div>
+                        </div>
+                        <div class="stats-value">42</div>
+                        <div class="stats-label">Applications Sent</div>
+                        <div class="stats-description">This month</div>
+                    </div>
+
+                    <!-- Stats Card 3 -->
+                    <div class="glass-card stats-card" style="animation-delay: 0.2s;">
+                        <div class="stats-header">
+                            <div class="stats-icon">
+                                <i class="fas fa-percentage"></i>
+                            </div>
+                            <div class="stats-trend up">
+                                <i class="fas fa-arrow-up"></i>
+                                3.1%
+                            </div>
+                        </div>
+                        <div class="stats-value">68%</div>
+                        <div class="stats-label">Match Rate</div>
+                        <div class="stats-description">Average confidence score</div>
+                    </div>
+
+                    <!-- Scanner Card -->
+                    <div class="glass-card large-card" style="animation-delay: 0.3s;">
+                        <div class="card-header">
+                            <h3 class="card-title">Opportunity Scanner</h3>
+                            <div class="card-actions">
+                                <button class="card-filter" id="scanSettingsBtn">
+                                    <i class="fas fa-sliders-h"></i> Settings
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Scanner Interface -->
+                        <div class="scanner-interface" id="scannerInterface">
+                            <!-- Idle State -->
+                            <div class="scanner-idle" id="scannerIdle">
+                                <i class="fas fa-search" style="font-size: 48px; opacity: 0.3; margin-bottom: 20px;"></i>
+                                <h4 style="font-size: 20px; font-weight: 700; margin-bottom: 12px;">Ready to Find Opportunities</h4>
+                                <p style="font-size: 14px; color: rgba(255, 255, 255, 0.6); margin-bottom: 28px;">
+                                    Scan multiple platforms for developer, designer, and freelance opportunities
+                                </p>
+                                <button class="start-scan-btn" id="startScanBtn">
+                                    <i class="fas fa-play"></i>
+                                    Start Scanning
+                                </button>
+                            </div>
+
+                            <!-- Scanning State -->
+                            <div class="scanner-active" id="scannerActive" style="display: none;">
+                                <div class="scan-progress">
+                                    <div class="scan-progress-bar">
+                                        <div class="scan-progress-fill" id="scanProgressFill"></div>
+                                    </div>
+                                    <div class="scan-percentage" id="scanPercentage">0%</div>
+                                </div>
+
+                                <div class="scan-log" id="scanLog">
+                                    <!-- Scan messages will appear here -->
+                                </div>
+
+                                <div class="scan-summary" id="scanSummary" style="display: none;">
+                                    <div class="summary-stat">
+                                        <i class="fas fa-check-circle"></i>
+                                        <div>
+                                            <div class="summary-value" id="totalOpportunities">0</div>
+                                            <div class="summary-label">Total Opportunities</div>
+                                        </div>
+                                    </div>
+                                    <div class="summary-stat">
+                                        <i class="fas fa-clock"></i>
+                                        <div>
+                                            <div class="summary-value" id="scanTime">0s</div>
+                                            <div class="summary-label">Scan Time</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button class="stop-scan-btn" id="stopScanBtn">
+                                    <i class="fas fa-stop"></i>
+                                    Stop Scanning
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Activity Timeline -->
+                    <div class="glass-card" style="animation-delay: 0.4s;">
+                        <div class="card-header">
+                            <h3 class="card-title">Recent Activity</h3>
+                        </div>
+                        <div class="activity-list">
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    <i class="fas fa-plus"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">New opportunity found</div>
+                                    <div class="activity-description">Senior React Developer</div>
+                                </div>
+                                <div class="activity-time">2m ago</div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    <i class="fas fa-paper-plane"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Application sent</div>
+                                    <div class="activity-description">Web3 Designer role</div>
+                                </div>
+                                <div class="activity-time">15m ago</div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    <i class="fas fa-bell"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">WhatsApp notification</div>
+                                    <div class="activity-description">3 new opportunities</div>
+                                </div>
+                                <div class="activity-time">1h ago</div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    <i class="fas fa-filter"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Filter updated</div>
+                                    <div class="activity-description">Added "blockchain" keyword</div>
+                                </div>
+                                <div class="activity-time">3h ago</div>
+                            </div>
+                            <div class="activity-item">
+                                <div class="activity-icon">
+                                    <i class="fas fa-rocket"></i>
+                                </div>
+                                <div class="activity-content">
+                                    <div class="activity-title">Token launch detected</div>
+                                    <div class="activity-description">New project on DexScreener</div>
+                                </div>
+                                <div class="activity-time">5h ago</div>
+                            </div>
+                        </div>
+                    </div>
+
+                  
+
+                    <!-- Top Keywords -->
+                    <div class="glass-card full-width" style="animation-delay: 0.8s;">
+                        <div class="card-header">
+                            <h3 class="card-title">Top Performing Keywords</h3>
+                            <div class="card-actions">
+                                <button class="card-filter">Last 30 Days</button>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 20px;">
+                            <div style="padding: 20px; background: rgba(255, 255, 255, 0.04); border-radius: 12px; text-align: center;">
+                                <div style="font-size: 32px; font-weight: 800; font-family: 'Poppins', sans-serif; margin-bottom: 8px;">87</div>
+                                <div style="font-size: 14px; color: rgba(255, 255, 255, 0.6);">React Developer</div>
+                            </div>
+                            <div style="padding: 20px; background: rgba(255, 255, 255, 0.04); border-radius: 12px; text-align: center;">
+                                <div style="font-size: 32px; font-weight: 800; font-family: 'Poppins', sans-serif; margin-bottom: 8px;">65</div>
+                                <div style="font-size: 14px; color: rgba(255, 255, 255, 0.6);">Web3 Designer</div>
+                            </div>
+                            <div style="padding: 20px; background: rgba(255, 255, 255, 0.04); border-radius: 12px; text-align: center;">
+                                <div style="font-size: 32px; font-weight: 800; font-family: 'Poppins', sans-serif; margin-bottom: 8px;">52</div>
+                                <div style="font-size: 14px; color: rgba(255, 255, 255, 0.6);">Community Manager</div>
+                            </div>
+                            <div style="padding: 20px; background: rgba(255, 255, 255, 0.04); border-radius: 12px; text-align: center;">
+                                <div style="font-size: 32px; font-weight: 800; font-family: 'Poppins', sans-serif; margin-bottom: 8px;">43</div>
+                                <div style="font-size: 14px; color: rgba(255, 255, 255, 0.6);">Blockchain Dev</div>
+                            </div>
+                            <div style="padding: 20px; background: rgba(255, 255, 255, 0.04); border-radius: 12px; text-align: center;">
+                                <div style="font-size: 32px; font-weight: 800; font-family: 'Poppins', sans-serif; margin-bottom: 8px;">38</div>
+                                <div style="font-size: 14px; color: rgba(255, 255, 255, 0.6);">Marketing Lead</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Upgrade Modal -->
+    <div class="modal-overlay" id="upgradeModal">
+        <div class="modal-content">
+            <button class="modal-close" id="modalClose">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <h2 class="modal-title">Upgrade Your Plan</h2>
+            <p class="modal-subtitle">Choose the perfect plan for your needs</p>
+
+            <div class="pricing-modal-grid">
+                <!-- Free Plan -->
+                <div class="pricing-modal-card">
+                    <span class="pricing-modal-badge">Current Plan</span>
+                    <h3 class="pricing-modal-name">Free</h3>
+                    <div class="pricing-modal-price">$0<span>/mo</span></div>
+                    <ul class="pricing-modal-features">
+                        <li><i class="fas fa-check"></i> 10 keywords</li>
+                        <li><i class="fas fa-check"></i> Basic platforms</li>
+                        <li><i class="fas fa-check"></i> 50+ opps/week</li>
+                        <li><i class="fas fa-check"></i> WhatsApp alerts</li>
+                    </ul>
+                    <button class="pricing-modal-btn" disabled style="opacity: 0.5; cursor: not-allowed;">Current Plan</button>
+                </div>
+
+                <!-- Pro Plan -->
+                <div class="pricing-modal-card featured">
+                    <span class="pricing-modal-badge">Most Popular</span>
+                    <h3 class="pricing-modal-name">Pro</h3>
+                    <div class="pricing-modal-price">$29<span>/mo</span></div>
+                    <ul class="pricing-modal-features">
+                        <li><i class="fas fa-check"></i> Everything in Free</li>
+                        <li><i class="fas fa-check"></i> 30+ keywords</li>
+                        <li><i class="fas fa-check"></i> LinkedIn scraper</li>
+                        <li><i class="fas fa-check"></i> DexScreener tokens</li>
+                        <li><i class="fas fa-check"></i> 200+ opps/week</li>
+                        <li><i class="fas fa-check"></i> Advanced AI</li>
+                    </ul>
+                    <button class="pricing-modal-btn">Upgrade to Pro</button>
+                </div>
+
+                <!-- Ultra Plan -->
+                <div class="pricing-modal-card">
+                    <span class="pricing-modal-badge">Maximum Power</span>
+                    <h3 class="pricing-modal-name">Ultra</h3>
+                    <div class="pricing-modal-price">$79<span>/mo</span></div>
+                    <ul class="pricing-modal-features">
+                        <li><i class="fas fa-check"></i> Everything in Pro</li>
+                        <li><i class="fas fa-check"></i> Unlimited keywords</li>
+                        <li><i class="fas fa-check"></i> All platforms</li>
+                        <li><i class="fas fa-check"></i> Custom AI prompts</li>
+                        <li><i class="fas fa-check"></i> 500+ opps/week</li>
+                        <li><i class="fas fa-check"></i> Priority support</li>
+                    </ul>
+                    <button class="pricing-modal-btn">Upgrade to Ultra</button>
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- Add this script in dashboard.html -->
+<script>
+async function loadUpgradeModal() {
+    try {
+        const plans = await API.getSubscriptionPlans();
+        const user = await API.getCurrentUser();
+        const modalContent = document.querySelector('.pricing-modal-grid');
+        
+        modalContent.innerHTML = '';
+        
+        plans.forEach(plan => {
+            const isCurrentPlan = plan.tier === user.tier;
+            
+            const card = document.createElement('div');
+            card.className = 'pricing-modal-card' + (plan.tier === 'pro' ? ' featured' : '');
+            
+            const priceDisplay = plan.price === 0 ? 'Free' : `₦${plan.price.toLocaleString()}/mo`;
+            const badge = isCurrentPlan ? 'Current Plan' : (plan.tier === 'pro' ? 'Most Popular' : '');
+            
+            card.innerHTML = `
+                ${badge ? `<span class="pricing-modal-badge">${badge}</span>` : ''}
+                <h3 class="pricing-modal-name">${plan.tier.charAt(0).toUpperCase() + plan.tier.slice(1)}</h3>
+                <div class="pricing-modal-price">${priceDisplay}${plan.price > 0 ? '' : ''}</div>
+                <ul class="pricing-modal-features">
+                    <li><i class="fas fa-check"></i> ${plan.max_niches} niches</li>
+                    <li><i class="fas fa-check"></i> ${plan.max_keywords_per_niche} keywords/niche</li>
+                    <li><i class="fas fa-check"></i> ${plan.platforms.length} platforms</li>
+                    <li><i class="fas fa-check"></i> ${plan.monthly_opportunities_limit === -1 ? 'Unlimited' : plan.monthly_opportunities_limit} opps/month</li>
+                    ${plan.features ? plan.features.map(f => `<li><i class="fas fa-check"></i> ${f}</li>`).join('') : ''}
+                </ul>
+                <button class="pricing-modal-btn" 
+                        ${isCurrentPlan ? 'disabled' : ''}
+                        onclick="upgradeToPlan('${plan.tier}', '${plan.id || plan._id}')">
+                    ${isCurrentPlan ? 'Current Plan' : `Upgrade to ${plan.tier.toUpperCase()}`}
+                </button>
+            `;
+            
+            modalContent.appendChild(card);
+        });
+    } catch (error) {
+        console.error('Failed to load pricing:', error);
+        document.querySelector('.pricing-modal-grid').innerHTML = `
+            <div style="grid-column: 1/-1; text-align: center; padding: 40px;">
+                <p>Failed to load pricing plans. Please try again.</p>
+            </div>
+        `;
+    }
+}
+
+async function upgradeToPlan(tier) {
+    try {
+        console.log(`Upgrading to ${tier} tier...`);
+        
+        // Validate tier
+        if (!['pro', 'premium'].includes(tier)) {
+            alert('Invalid tier');
+            return;
+        }
+        
+        // Show loading state
+        const btn = event?.target; // ← FIX: Use optional chaining
+        if (btn) {
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Upgrading...';
+            btn.disabled = true;
+        }
+        
+        // Call API to upgrade
+        const response = await API.upgradeSubscription(tier);
+        console.log('Upgrade response:', response);
+        
+        if (response.success) {
+            // Update UI
+            document.getElementById('upgradeBtnText').innerText = `Upgraded to ${tier.charAt(0).toUpperCase() + tier.slice(1)}`;
+            document.getElementById('upgradeBtn').classList.add('upgraded');
+            
+            // Reload plans in modal
+            loadUpgradeModal();
+            
+            // Show success message
+            alert(`Successfully upgraded to ${tier.charAt(0).toUpperCase() + tier.slice(1)}!`);
+        } else {
+            alert('Upgrade failed. Please try again.');
+        }
+    } catch (error) {
+        console.error('Upgrade error:', error);
+        alert('An error occurred while upgrading. Please try again.');
+    } finally {
+        // Hide loading state
+        const btn = event?.target;
+        if (btn) {
+            btn.innerHTML = `Upgrade to ${tier.charAt(0).toUpperCase() + tier.slice(1)}`;
+            btn.disabled = false;
+        }
+    }
+}
+
+// Load upgrade modal on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadUpgradeModal();
+});
+</script>
+</body>
+</html>
