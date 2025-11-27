@@ -32,10 +32,8 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = Field(default="http://localhost:5501", validation_alias="FRONTEND_URL")
     
     # MongoDB
-    MONGODB_URI: str = Field(
-        default="mongodb+srv://user:pass@cluster.mongodb.net/jobhunter",
-        validation_alias="MONGODB_URI"
-    )
+    MONGODB_URI: str = Field(default="mongodb://localhost:27017", env="MONGODB_URI")
+    # Make sure this matches what Render expects
     DATABASE_NAME: str = Field(default="jobhunter", validation_alias="DATABASE_NAME")
     
     # Google OAuth

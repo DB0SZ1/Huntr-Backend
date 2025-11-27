@@ -90,7 +90,7 @@ class MongoDBManager:
                 
                 # Create client with optimized settings
                 self.client = AsyncIOMotorClient(
-                    settings.MONGODB_URL,
+                    settings.MONGODB_URI,  # ← CHANGE: MONGODB_URL → MONGODB_URI
                     serverSelectionTimeoutMS=10000,  # Increased to 10s
                     connectTimeoutMS=15000,          # Increased to 15s
                     socketTimeoutMS=20000,
