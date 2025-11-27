@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 import uuid
 
 from app.database.connection import get_database
-from app.auth.jwt_handler import get_current_user_id, get_current_user
+from app.auth.oauth import get_current_user
 from app.credits.manager import CreditManager
 from config import TIER_LIMITS, CREDIT_COSTS
 
