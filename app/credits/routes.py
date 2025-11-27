@@ -255,3 +255,158 @@ async def check_credits_for_scan(
     except Exception as e:
         logger.error(f"Error checking credits: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to check credits")
+
+
+@router.get("/summary")
+async def get_credits_summary(
+    current_user: dict = Depends(get_current_user),
+    db = Depends(get_database)
+):
+    """Get comprehensive credit summary with proper calculation"""
+    try:
+        user_id = current_user.get("_id")
+        
+        # Fetch user credit record
+        credit_record = await db.user_credits.find_one({"user_id": user_id})
+        
+        if not credit_record:
+            # Initialize credit record
+            credit_record = {
+                "user_id": user_id,
+                "tier": current_user.get("tier", "free"),
+                "daily_credits_total": 50 if current_user.get("tier") == "pro" else 10,
+                "daily_credits_used": 0,
+                "total_credits_purchased": 0,
+                "total_credits_used": 0,
+                "last_refill_date": datetime.utcnow(),
+                "next_refill_time": datetime.utcnow() + timedelta(days=1),
+                "credit_transactions": []
+            }
+            await db.user_credits.insert_one(credit_record)
+        
+        # Check if daily reset needed
+        now = datetime.utcnow()
+        last_refill = credit_record.get("last_refill_date", now)
+        
+        if now >= last_refill + timedelta(days=1):
+            # Reset daily credits
+            daily_total = 50 if current_user.get("tier") == "pro" else 10
+            credit_record["daily_credits_used"] = 0
+            credit_record["last_refill_date"] = now
+            credit_record["next_refill_time"] = now + timedelta(days=1)
+            
+            await db.user_credits.update_one(
+                {"user_id": user_id},
+                {"$set": {
+                    "daily_credits_used": 0,
+                    "last_refill_date": now,
+                    "next_refill_time": now + timedelta(days=1)
+                }}
+            )
+        
+        daily_total = credit_record.get("daily_credits_total", 10)
+        daily_used = credit_record.get("daily_credits_used", 0)
+        daily_remaining = max(0, daily_total - daily_used)
+        
+        return {
+            "data": {
+                "daily_credits_total": daily_total,
+                "daily_credits_remaining": daily_remaining,
+                "daily_credits_used": daily_used,
+                "total_credits_used": credit_record.get("total_credits_used", 0),
+                "total_credits_purchased": credit_record.get("total_credits_purchased", 0),
+                "tier": current_user.get("tier", "free"),
+                "last_refill_date": credit_record.get("last_refill_date"),
+                "next_refill_time": credit_record.get("next_refill_time"),
+                "hours_until_next_refill": round((credit_record.get("next_refill_time", now) - now).total_seconds() / 3600)
+            }
+        }
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching credits: {str(e)}")
+
+
+@router.post("/deduct")
+async def deduct_credits(
+    amount: int,
+    operation_type: str,
+    current_user: dict = Depends(get_current_user),
+    db = Depends(get_database)
+):
+    """
+    Deduct credits with transaction logging
+    Used internally by scan, search, etc.
+    """
+    try:
+        user_id = current_user.get("_id")
+        
+        # Get current credits
+        credit_record = await db.user_credits.find_one({"user_id": user_id})
+        
+        if not credit_record:
+            raise HTTPException(status_code=400, detail="Credit record not found")
+        
+        daily_used = credit_record.get("daily_credits_used", 0)
+        daily_total = credit_record.get("daily_credits_total", 10)
+        
+        if daily_used + amount > daily_total:
+            remaining = daily_total - daily_used
+            return {
+                "success": False,
+                "message": f"Insufficient credits. Required: {amount}, Available: {remaining}",
+                "credits_needed": amount,
+                "current_credits": remaining
+            }
+        
+        # Deduct credits
+        new_daily_used = daily_used + amount
+        total_used = credit_record.get("total_credits_used", 0) + amount
+        
+        await db.user_credits.update_one(
+            {"user_id": user_id},
+            {"$set": {
+                "daily_credits_used": new_daily_used,
+                "total_credits_used": total_used
+            }}
+        )
+        
+        # Log transaction
+        await db.credit_transactions.insert_one({
+            "user_id": user_id,
+            "amount": amount,
+            "operation_type": operation_type,
+            "timestamp": datetime.utcnow(),
+            "remaining_daily": daily_total - new_daily_used
+        })
+        
+        return {
+            "success": True,
+            "message": f"{amount} credits deducted",
+            "credits_deducted": amount,
+            "daily_credits_remaining": daily_total - new_daily_used
+        }
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error deducting credits: {str(e)}")
+
+
+@router.get("/transactions")
+async def get_credit_transactions(
+    current_user: dict = Depends(get_current_user),
+    db = Depends(get_database)
+):
+    """Get credit transaction history"""
+    try:
+        user_id = current_user.get("_id")
+        
+        transactions = await db.credit_transactions.find(
+            {"user_id": user_id}
+        ).sort("timestamp", -1).limit(50).to_list(None)
+        
+        return {
+            "data": transactions,
+            "total": len(transactions)
+        }
+    
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error fetching transactions: {str(e)}")
