@@ -112,7 +112,7 @@ async def start_scan(
 @router.get("/status/{scan_id}")
 async def get_scan_status(
     scan_id: str,
-    user_id: str = Depends(get_current_user_id),
+    user_id: str = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_database)
 ):
     """
@@ -146,7 +146,7 @@ async def get_scan_status(
 
 @router.get("/history")
 async def get_scan_history(
-    user_id: str = Depends(get_current_user_id),
+    user_id: str = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_database),
     limit: int = 20
 ):

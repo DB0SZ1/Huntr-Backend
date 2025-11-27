@@ -31845,3 +31845,327 @@ AttributeError: 'Settings' object has no attribute 'MONGODB_URL'
 2025-11-26 20:17:12,563 - main - INFO - ============================================================
 2025-11-26 20:17:20,160 - watchfiles.main - INFO - 1 change detected
 2025-11-26 20:17:38,203 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:16:39,693 - __main__ - INFO - ============================================================
+2025-11-27 15:16:39,694 - __main__ - INFO - Starting Uvicorn Server...
+2025-11-27 15:16:39,695 - __main__ - INFO - Debug Mode: True
+2025-11-27 15:16:39,695 - __main__ - INFO - API URL: http://localhost:8000
+2025-11-27 15:16:39,696 - __main__ - INFO - ============================================================
+2025-11-27 15:16:43,797 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:16:43,987 - main - INFO - ============================================================
+2025-11-27 15:16:43,988 - main - INFO - Starting Multi-Tenant Job Hunter Backend (v2.1 - Render Optimized)...
+2025-11-27 15:16:43,989 - main - INFO - ============================================================
+2025-11-27 15:16:43,990 - main - INFO - [INFO] Connecting to MongoDB...
+2025-11-27 15:16:43,991 - app.database.connection - INFO - [ATTEMPT 1/3] MongoDB connection...
+2025-11-27 15:16:45,223 - app.database.connection - INFO - [CHECK] Testing connection with ping...
+2025-11-27 15:16:55,418 - app.database.connection - ERROR - [TIMEOUT] Connection timeout on attempt 1
+2025-11-27 15:16:57,415 - app.database.connection - INFO - [ATTEMPT 2/3] MongoDB connection...
+2025-11-27 15:16:57,435 - app.database.connection - INFO - [CHECK] Testing connection with ping...
+2025-11-27 15:17:07,446 - app.database.connection - ERROR - [TIMEOUT] Connection timeout on attempt 2
+2025-11-27 15:17:11,450 - app.database.connection - INFO - [ATTEMPT 3/3] MongoDB connection...
+2025-11-27 15:17:11,454 - app.database.connection - INFO - [CHECK] Testing connection with ping...
+2025-11-27 15:17:21,467 - app.database.connection - ERROR - [TIMEOUT] Connection timeout on attempt 3
+2025-11-27 15:17:21,469 - app.database.connection - CRITICAL - Failed to connect to MongoDB after 3 attempts
+2025-11-27 15:17:21,470 - main - CRITICAL - [FAIL] MongoDB connection failed: Failed to connect to MongoDB after 3 attempts: 
+2025-11-27 15:17:21,472 - main - CRITICAL - [CRITICAL] Application cannot start without database connection
+2025-11-27 15:17:21,473 - main - WARNING - [WARNING] App starting in degraded mode - database unavailable
+2025-11-27 15:17:21,475 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-11-27 15:17:21,515 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-11-27 15:17:21,518 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-11-27 15:17:21,521 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-11-27 15:17:21,524 - main - ERROR - [WARN] Scheduler start failed: Invalid weekday name "sunday"
+2025-11-27 15:17:21,527 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-11-27 15:17:21,532 - apscheduler.scheduler - INFO - Added job "KeepAliveService._ping" to job store "default"
+2025-11-27 15:17:21,533 - apscheduler.scheduler - INFO - Scheduler started
+2025-11-27 15:17:21,534 - app.monitoring.keep_alive - INFO - ✓ Keep-alive service started (pings every 14 min)
+2025-11-27 15:17:21,536 - main - INFO - [OK] Keep-alive service started (Render optimization)
+2025-11-27 15:17:21,536 - main - INFO - ============================================================
+2025-11-27 15:17:21,537 - main - INFO - Application startup complete!
+2025-11-27 15:17:21,537 - main - INFO - ============================================================
+2025-11-27 15:18:16,696 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:18:16,827 - main - INFO - ============================================================
+2025-11-27 15:18:16,828 - main - INFO - Shutting down application...
+2025-11-27 15:18:16,829 - main - INFO - ============================================================
+2025-11-27 15:18:18,533 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:18:37,119 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:18:39,917 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:18:40,278 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:18:40,517 - main - INFO - ============================================================
+2025-11-27 15:18:40,520 - main - INFO - Starting Multi-Tenant Job Hunter Backend (v2.1 - Render Optimized)...
+2025-11-27 15:18:40,522 - main - INFO - ============================================================
+2025-11-27 15:18:40,534 - main - INFO - [INFO] Connecting to MongoDB...
+2025-11-27 15:18:40,542 - app.database.connection - INFO - [ATTEMPT 1/3] MongoDB connection...
+2025-11-27 15:18:40,592 - app.database.connection - INFO - [CHECK] Testing connection with ping...
+2025-11-27 15:18:43,784 - watchfiles.main - INFO - 39 changes detected
+2025-11-27 15:20:13,785 - app.database.connection - ERROR - [TIMEOUT] Connection timeout on attempt 1
+2025-11-27 15:20:16,832 - app.database.connection - INFO - [ATTEMPT 2/3] MongoDB connection...
+2025-11-27 15:20:17,159 - app.database.connection - INFO - [CHECK] Testing connection with ping...
+2025-11-27 15:20:27,170 - app.database.connection - ERROR - [TIMEOUT] Connection timeout on attempt 2
+2025-11-27 15:20:31,166 - app.database.connection - INFO - [ATTEMPT 3/3] MongoDB connection...
+2025-11-27 15:20:31,171 - app.database.connection - INFO - [CHECK] Testing connection with ping...
+2025-11-27 15:20:41,172 - app.database.connection - ERROR - [TIMEOUT] Connection timeout on attempt 3
+2025-11-27 15:20:41,172 - app.database.connection - CRITICAL - Failed to connect to MongoDB after 3 attempts
+2025-11-27 15:20:41,173 - main - CRITICAL - [FAIL] MongoDB connection failed: Failed to connect to MongoDB after 3 attempts: 
+2025-11-27 15:20:41,173 - main - CRITICAL - [CRITICAL] Application cannot start without database connection
+2025-11-27 15:20:41,173 - main - WARNING - [WARNING] App starting in degraded mode - database unavailable
+2025-11-27 15:20:41,174 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-11-27 15:20:41,183 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-11-27 15:20:41,184 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-11-27 15:20:41,184 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-11-27 15:20:41,185 - main - ERROR - [WARN] Scheduler start failed: Invalid weekday name "sunday"
+2025-11-27 15:20:41,185 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-11-27 15:20:41,188 - apscheduler.scheduler - INFO - Added job "KeepAliveService._ping" to job store "default"
+2025-11-27 15:20:41,188 - apscheduler.scheduler - INFO - Scheduler started
+2025-11-27 15:20:41,189 - app.monitoring.keep_alive - INFO - ✓ Keep-alive service started (pings every 14 min)
+2025-11-27 15:20:41,189 - main - INFO - [OK] Keep-alive service started (Render optimization)
+2025-11-27 15:20:41,189 - main - INFO - ============================================================
+2025-11-27 15:20:41,189 - main - INFO - Application startup complete!
+2025-11-27 15:20:41,190 - main - INFO - ============================================================
+2025-11-27 15:20:48,142 - watchfiles.main - INFO - 20 changes detected
+2025-11-27 15:20:50,959 - watchfiles.main - INFO - 13 changes detected
+2025-11-27 15:20:52,360 - watchfiles.main - INFO - 28 changes detected
+2025-11-27 15:20:52,897 - watchfiles.main - INFO - 15 changes detected
+2025-11-27 15:20:56,664 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:20:57,023 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:20:57,857 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:20:58,770 - watchfiles.main - INFO - 2 changes detected
+2025-11-27 15:20:59,212 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:21:00,837 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:21:01,754 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:21:02,132 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:21:02,498 - watchfiles.main - INFO - 2 changes detected
+2025-11-27 15:21:11,443 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:21:19,552 - watchfiles.main - INFO - 27 changes detected
+2025-11-27 15:21:20,172 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:21:20,601 - watchfiles.main - INFO - 2 changes detected
+2025-11-27 15:21:22,211 - watchfiles.main - INFO - 4 changes detected
+2025-11-27 15:21:23,817 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:21:24,795 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:21:25,621 - watchfiles.main - INFO - 3 changes detected
+2025-11-27 15:21:26,222 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:21:27,555 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:21:28,736 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:21:29,213 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:21:29,636 - watchfiles.main - INFO - 8 changes detected
+2025-11-27 15:21:31,066 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:21:31,985 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:21:32,672 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:21:34,754 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:21:35,585 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:21:39,381 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:21:39,745 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:21:41,335 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:21:41,927 - watchfiles.main - INFO - 2 changes detected
+2025-11-27 15:21:48,918 - watchfiles.main - INFO - 4 changes detected
+2025-11-27 15:21:53,117 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:21:53,950 - watchfiles.main - INFO - 6 changes detected
+2025-11-27 15:21:54,371 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:21:54,932 - watchfiles.main - INFO - 62 changes detected
+2025-11-27 15:21:55,363 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:21:55,725 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:21:56,136 - watchfiles.main - INFO - 15 changes detected
+2025-11-27 15:21:56,501 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:21:56,840 - main - INFO - ============================================================
+2025-11-27 15:21:56,841 - main - INFO - Starting Multi-Tenant Job Hunter Backend (v2.1 - Render Optimized)...
+2025-11-27 15:21:56,841 - main - INFO - ============================================================
+2025-11-27 15:21:56,842 - main - INFO - [INFO] Connecting to MongoDB...
+2025-11-27 15:21:56,842 - app.database.connection - INFO - [ATTEMPT 1/3] MongoDB connection...
+2025-11-27 15:21:56,843 - app.database.connection - CRITICAL - [CRITICAL] Unexpected error during connection: 'Settings' object has no attribute 'MONGODB_URL'
+Traceback (most recent call last):
+  File "c:\Users\IDRIS\Desktop\job-hunter-backend\app\database\connection.py", line 93, in connect
+    settings.MONGODB_URL,
+    ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\pydantic\main.py", line 1026, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'Settings' object has no attribute 'MONGODB_URL'
+2025-11-27 15:21:56,846 - app.database.connection - INFO - [RETRY] Retrying after unexpected error...
+2025-11-27 15:21:56,881 - watchfiles.main - INFO - 6 changes detected
+2025-11-27 15:21:57,598 - watchfiles.main - INFO - 39 changes detected
+2025-11-27 15:21:58,856 - app.database.connection - INFO - [ATTEMPT 2/3] MongoDB connection...
+2025-11-27 15:21:58,856 - app.database.connection - CRITICAL - [CRITICAL] Unexpected error during connection: 'Settings' object has no attribute 'MONGODB_URL'
+Traceback (most recent call last):
+  File "c:\Users\IDRIS\Desktop\job-hunter-backend\app\database\connection.py", line 93, in connect
+    settings.MONGODB_URL,
+    ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\pydantic\main.py", line 1026, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'Settings' object has no attribute 'MONGODB_URL'
+2025-11-27 15:21:58,883 - app.database.connection - INFO - [RETRY] Retrying after unexpected error...
+2025-11-27 15:22:02,886 - app.database.connection - INFO - [ATTEMPT 3/3] MongoDB connection...
+2025-11-27 15:22:02,887 - app.database.connection - CRITICAL - [CRITICAL] Unexpected error during connection: 'Settings' object has no attribute 'MONGODB_URL'
+Traceback (most recent call last):
+  File "c:\Users\IDRIS\Desktop\job-hunter-backend\app\database\connection.py", line 93, in connect
+    settings.MONGODB_URL,
+    ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\pydantic\main.py", line 1026, in __getattr__
+    raise AttributeError(f'{type(self).__name__!r} object has no attribute {item!r}')
+AttributeError: 'Settings' object has no attribute 'MONGODB_URL'
+2025-11-27 15:22:02,889 - main - CRITICAL - [FAIL] MongoDB connection failed: 'Settings' object has no attribute 'MONGODB_URL'
+2025-11-27 15:22:02,889 - main - CRITICAL - [CRITICAL] Application cannot start without database connection
+2025-11-27 15:22:02,889 - main - WARNING - [WARNING] App starting in degraded mode - database unavailable
+2025-11-27 15:22:02,890 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-11-27 15:22:02,899 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-11-27 15:22:02,904 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-11-27 15:22:02,905 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-11-27 15:22:02,905 - main - ERROR - [WARN] Scheduler start failed: Invalid weekday name "sunday"
+2025-11-27 15:22:02,906 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-11-27 15:22:02,908 - apscheduler.scheduler - INFO - Added job "KeepAliveService._ping" to job store "default"
+2025-11-27 15:22:02,908 - apscheduler.scheduler - INFO - Scheduler started
+2025-11-27 15:22:02,909 - app.monitoring.keep_alive - INFO - ✓ Keep-alive service started (pings every 14 min)
+2025-11-27 15:22:02,909 - main - INFO - [OK] Keep-alive service started (Render optimization)
+2025-11-27 15:22:02,910 - main - INFO - ============================================================
+2025-11-27 15:22:02,911 - main - INFO - Application startup complete!
+2025-11-27 15:22:02,911 - main - INFO - ============================================================
+2025-11-27 15:22:03,908 - watchfiles.main - INFO - 17 changes detected
+2025-11-27 15:22:05,532 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:22:05,899 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:22:06,263 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:22:06,626 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:22:07,343 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:22:07,699 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:22:08,063 - watchfiles.main - INFO - 27 changes detected
+2025-11-27 15:22:08,478 - watchfiles.main - INFO - 17 changes detected
+2025-11-27 15:22:22,690 - watchfiles.main - INFO - 2 changes detected
+2025-11-27 15:22:39,564 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:22:41,096 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:22:41,977 - watchfiles.main - INFO - 2 changes detected
+2025-11-27 15:22:42,986 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:22:46,400 - watchfiles.main - INFO - 20 changes detected
+2025-11-27 15:22:49,744 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:22:50,104 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:22:52,557 - watchfiles.main - INFO - 3 changes detected
+2025-11-27 15:22:53,108 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:22:54,467 - watchfiles.main - INFO - 3 changes detected
+2025-11-27 15:22:55,005 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:22:56,561 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:22:57,404 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:23:25,261 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:23:43,410 - watchfiles.main - INFO - 3 changes detected
+2025-11-27 15:23:44,784 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:24:06,450 - watchfiles.main - INFO - 44 changes detected
+2025-11-27 15:24:13,303 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:24:14,174 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:24:17,872 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:24:18,232 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:24:19,101 - watchfiles.main - INFO - 10 changes detected
+2025-11-27 15:24:24,168 - watchfiles.main - INFO - 10 changes detected
+2025-11-27 15:24:25,293 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:24:29,039 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:24:29,803 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:24:30,157 - watchfiles.main - INFO - 22 changes detected
+2025-11-27 15:24:30,522 - watchfiles.main - INFO - 16 changes detected
+2025-11-27 15:24:53,309 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:24:55,282 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:24:57,251 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:24:57,611 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:25:09,070 - watchfiles.main - INFO - 21 changes detected
+2025-11-27 15:25:12,098 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:25:22,036 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:25:22,395 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:25:22,749 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:25:24,024 - watchfiles.main - INFO - 2 changes detected
+2025-11-27 15:25:24,394 - watchfiles.main - INFO - 22 changes detected
+2025-11-27 15:25:25,403 - watchfiles.main - INFO - 2 changes detected
+2025-11-27 15:25:28,108 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:25:29,119 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:25:32,097 - watchfiles.main - INFO - 22 changes detected
+2025-11-27 15:25:32,924 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:25:35,268 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:25:36,382 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:25:36,743 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:25:37,108 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:25:37,471 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:25:38,039 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:25:38,507 - watchfiles.main - INFO - 38 changes detected
+2025-11-27 15:25:38,882 - watchfiles.main - INFO - 7 changes detected
+2025-11-27 15:25:49,854 - watchfiles.main - INFO - 2 changes detected
+2025-11-27 15:25:54,253 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:08,866 - watchfiles.main - INFO - 45 changes detected
+2025-11-27 15:26:11,581 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:12,706 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:13,646 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:14,440 - watchfiles.main - INFO - 2 changes detected
+2025-11-27 15:26:18,283 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:26:18,874 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:26:20,229 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:26:20,592 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:26:21,059 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:26:21,416 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:26:21,781 - watchfiles.main - INFO - 5 changes detected
+2025-11-27 15:26:22,263 - watchfiles.main - INFO - 38 changes detected
+2025-11-27 15:26:22,636 - watchfiles.main - INFO - 7 changes detected
+2025-11-27 15:26:28,806 - watchfiles.main - INFO - 2 changes detected
+2025-11-27 15:26:29,335 - watchfiles.main - INFO - 2 changes detected
+2025-11-27 15:26:29,709 - watchfiles.main - INFO - 2 changes detected
+2025-11-27 15:26:30,123 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:30,535 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:30,946 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:31,403 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:31,898 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:34,222 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:34,601 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:35,082 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:35,487 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:35,848 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:36,261 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:36,679 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:37,084 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:37,442 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:37,856 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:38,267 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:38,631 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:39,048 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:39,456 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:39,863 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:40,274 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:40,633 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:41,043 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:41,455 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:41,817 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:42,230 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:42,639 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:43,050 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:43,412 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:43,825 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:44,235 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:44,645 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:45,006 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:45,420 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:45,832 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:46,193 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:46,596 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:47,003 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:47,416 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:47,778 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:48,189 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:48,598 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:49,007 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:49,370 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:49,785 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:50,195 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:50,605 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:50,964 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:51,378 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:51,789 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:52,150 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:52,561 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:52,973 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:53,383 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:53,791 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:26:54,150 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:27:00,014 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:27:01,325 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:27:04,630 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:27:23,494 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:27:25,468 - watchfiles.main - INFO - 1 change detected
+2025-11-27 15:27:31,636 - watchfiles.main - INFO - 47 changes detected
+2025-11-27 15:31:58,128 - __main__ - INFO - ============================================================
+2025-11-27 15:31:58,129 - __main__ - INFO - Starting Uvicorn Server...
+2025-11-27 15:31:58,129 - __main__ - INFO - Debug Mode: False
+2025-11-27 15:31:58,129 - __main__ - INFO - API URL: https://job-hunter-api.onrender.com
+2025-11-27 15:31:58,130 - __main__ - INFO - ============================================================
+2025-11-27 15:31:58,364 - main - INFO - ============================================================
+2025-11-27 15:31:58,365 - main - INFO - Starting Multi-Tenant Job Hunter Backend (v2.1 - Render Optimized)...
+2025-11-27 15:31:58,365 - main - INFO - ============================================================
+2025-11-27 15:31:58,365 - main - INFO - [INFO] Connecting to MongoDB...
+2025-11-27 15:31:58,366 - app.database.connection - INFO - [ATTEMPT 1/3] MongoDB connection...
+2025-11-27 15:31:58,391 - app.database.connection - INFO - [CHECK] Testing connection with ping...
