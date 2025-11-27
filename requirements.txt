@@ -43,7 +43,7 @@ lxml
 python-dotenv
 colorama
 
-# Render optimization (use built-in Redis if available on Render)
+# Render optimization
 redis
 
 # Monitoring
@@ -66,12 +66,13 @@ slowapi
 # UUID & Datetime
 python-dateutil
 
-# Bank/Payment Validation
-iban
+# Bank/Payment Validation (FIXED!)
+schwifty  # IBAN & BIC validation - CHOOSE THIS
+# OR use: python-stdnum
 validate-docbr
 
 # Phone Validation
 phonenumbers
 
-# Postal Code Validation (choose one based on your needs)
+# Postal Code Validation
 pycountry
