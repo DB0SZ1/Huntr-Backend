@@ -28,8 +28,8 @@ class Settings(BaseSettings):
     
     # Environment
     DEBUG: bool = Field(default=False, validation_alias="DEBUG")
-    API_URL: str = Field(default="http://localhost:8000", validation_alias="API_URL")
-    FRONTEND_URL: str = Field(default="http://localhost:5501", validation_alias="FRONTEND_URL")
+    API_URL: str = Field(default="https://huntr-backend.onrender.com", validation_alias="API_URL")
+    FRONTEND_URL: str = Field(default="https://huntr-bot.netlify.app", validation_alias="FRONTEND_URL")
     
     # MongoDB
     MONGODB_URI: str = Field(default="mongodb://localhost:27017", env="MONGODB_URI")
@@ -83,8 +83,9 @@ class Settings(BaseSettings):
         if self.API_URL:
             origins.append(self.API_URL)
         # Add Netlify frontend
-        if "netlify.app" not in str(origins):
+        if "https://huntr-bot.netlify.app" not in origins:
             origins.append("https://huntr-bot.netlify.app")
+        print(f"[CORS] Allowed origins: {origins}")  # Debug log
         return origins
     
     class Config:
