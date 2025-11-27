@@ -180,11 +180,13 @@ app.add_middleware(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "https://huntr-bot.netlify.app",
+    ] if not settings.DEBUG else [
         "http://localhost:3000",
         "http://localhost:5500",
         "http://localhost:5501",
-        "https://huntr-bot.netlify.app",  # ← Add your frontend
-    ] if settings.DEBUG else settings.ALLOWED_ORIGINS,
+        "https://huntr-bot.netlify.app",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
