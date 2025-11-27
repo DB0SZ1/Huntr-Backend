@@ -43,8 +43,7 @@ lxml
 python-dotenv
 colorama
 
-# Render optimization
-fastapi-cache2[redis]
+# Render optimization (use built-in Redis if available on Render)
 redis
 
 # Monitoring
@@ -56,13 +55,7 @@ gunicorn
 # Form Handling & Validation
 email-validator
 python-multipart
-
-# File Upload Handling
-python-multipart
 aiofiles
-
-# CORS (for frontend integration)
-python-cors
 
 # Security Headers
 secure
@@ -73,12 +66,12 @@ slowapi
 # UUID & Datetime
 python-dateutil
 
-# Bank/Payment Validation (for sort codes, account numbers)
+# Bank/Payment Validation
 iban
 validate-docbr
 
 # Phone Validation
 phonenumbers
 
-# Postal Code Validation
-postal-code
+# Postal Code Validation (choose one based on your needs)
+pycountry
