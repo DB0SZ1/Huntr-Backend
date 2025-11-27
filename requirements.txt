@@ -52,3 +52,33 @@ prometheus-client
 
 # Gunicorn for Render
 gunicorn
+
+# Form Handling & Validation
+email-validator
+python-multipart
+
+# File Upload Handling
+python-multipart
+aiofiles
+
+# CORS (for frontend integration)
+python-cors
+
+# Security Headers
+secure
+
+# Rate Limiting
+slowapi
+
+# UUID & Datetime
+python-dateutil
+
+# Bank/Payment Validation (for sort codes, account numbers)
+iban
+validate-docbr
+
+# Phone Validation
+phonenumbers
+
+# Postal Code Validation
+postal-code
