@@ -82,6 +82,9 @@ class Settings(BaseSettings):
         origins = [self.FRONTEND_URL]
         if self.API_URL:
             origins.append(self.API_URL)
+        # Add Netlify frontend
+        if "netlify.app" not in str(origins):
+            origins.append("https://huntr-bot.netlify.app")
         return origins
     
     class Config:
