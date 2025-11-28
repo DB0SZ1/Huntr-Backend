@@ -3,28 +3,139 @@ Scan Management Routes
 Manually trigger scans (free users) or automatic scheduling (paid tiers)
 """
 import logging
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from bson.objectid import ObjectId
 from datetime import datetime, timedelta
 import uuid
+import asyncio
 
-from app.database.connection import get_database
+from app.database.connection import get_database, check_database_health
 from app.auth.oauth import get_current_user
 from app.credits.manager import CreditManager
 from app.credits.routes import initialize_user_credits
 from config import TIER_LIMITS, CREDIT_COSTS
+from app.jobs.scraper import scrape_platforms_for_user
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/scans", tags=["Scans"])
 
 
+async def perform_scan_background(
+    scan_id: str,
+    user_id: str,
+    db: AsyncIOMotorDatabase
+):
+    """
+    Background task to perform actual scanning
+    Runs asynchronously after scan is created
+    
+    Args:
+        scan_id: The scan ID (string) to track progress
+        user_id: The user ID (string) to get tier
+        db: Database connection
+    """
+    try:
+        logger.info(f"[SCAN] Background scan task started: {scan_id}")
+        
+        # Get user's tier to determine which platforms to scan
+        user = await db.users.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            logger.error(f"[SCAN] User not found: {user_id}")
+            await db.scan_history.update_one(
+                {"scan_id": scan_id},
+                {"$set": {"status": "failed", "error": "User not found"}}
+            )
+            return
+        
+        user_tier = user.get("tier", "free")
+        
+        # Get platforms for this tier from config
+        tier_config = TIER_LIMITS.get(user_tier, TIER_LIMITS.get("free", {}))
+        platforms_to_scan = tier_config.get("platforms", ["Twitter/X", "Reddit"])
+        
+        logger.info(f"[SCAN] Scraping for user {user_id} (tier: {user_tier}) on platforms: {platforms_to_scan}")
+        
+        # Perform the actual scraping with the platforms list
+        results = await scrape_platforms_for_user(
+            platforms=platforms_to_scan,
+            max_concurrent=3
+        )
+        
+        # Extract opportunities from results
+        opportunities = results.get("opportunities", [])
+        stats = results.get("stats", {})
+        
+        # Update scan_history record with results
+        await db.scan_history.update_one(
+            {"scan_id": scan_id},
+            {
+                "$set": {
+                    "status": "completed",
+                    "completed_at": datetime.utcnow(),
+                    "opportunities_found": len(opportunities),
+                    "platforms_scanned": platforms_to_scan,
+                    "results": opportunities,
+                    "stats": stats,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        # Also update scans collection for consistency
+        await db.scans.update_one(
+            {"_id": ObjectId(scan_id)},
+            {
+                "$set": {
+                    "status": "completed",
+                    "completed_at": datetime.utcnow(),
+                    "opportunities_found": len(opportunities),
+                    "platforms_scanned": platforms_to_scan,
+                    "results": opportunities,
+                    "stats": stats,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+        
+        logger.info(f"[SCAN] ✅ Scan completed: {scan_id} - Found {len(opportunities)} opportunities on {len(platforms_to_scan)} platforms")
+    
+    except Exception as e:
+        logger.error(f"[SCAN] ❌ Background scan error for {scan_id}: {str(e)}", exc_info=True)
+        try:
+            # Update both collections with error status
+            error_msg = str(e)
+            await db.scan_history.update_one(
+                {"scan_id": scan_id},
+                {
+                    "$set": {
+                        "status": "failed",
+                        "error": error_msg,
+                        "completed_at": datetime.utcnow()
+                    }
+                }
+            )
+            await db.scans.update_one(
+                {"_id": ObjectId(scan_id)},
+                {
+                    "$set": {
+                        "status": "failed",
+                        "error": error_msg,
+                        "completed_at": datetime.utcnow()
+                    }
+                }
+            )
+        except Exception as err:
+            logger.error(f"[SCAN] Failed to update error status: {err}")
+
+
 @router.post("/start")
 async def start_scan(
     current_user: dict = Depends(get_current_user),
+    background_tasks: BackgroundTasks = BackgroundTasks(),
     db = Depends(get_database)
 ):
-    """Start a scan with proper credit deduction based on user tier"""
+    """Start a scan with proper credit deduction and background scraping"""
     try:
         # Get user_id from current_user (key is "id", not "_id")
         user_id = current_user.get("id")
@@ -172,16 +283,26 @@ async def start_scan(
             "results": []
         })
         
-        logger.info(f"Scan started for user {user_id}: {CREDITS_REQUIRED} credits deducted (tier: {user_tier})")
+        # ✅ STEP 10: Trigger background scraping task
+        background_tasks.add_task(
+            perform_scan_background,
+            scan_id=scan_id,
+            user_id=user_id,
+            db=db
+        )
+        
+        logger.info(f"Scan started for user {user_id}: {CREDITS_REQUIRED} credits deducted (tier: {user_tier}) - background task queued")
         
         return {
             "success": True,
-            "message": "Scan started successfully",
+            "message": "Scan started successfully. Background scraping in progress...",
             "scan_id": str(result.inserted_id),
+            "status": "running",
             "credits_deducted": CREDITS_REQUIRED,
             "credits_remaining": new_available,
             "tier": user_tier,
-            "daily_credits": daily_credits
+            "daily_credits": daily_credits,
+            "note": "Check /api/scans/status/{scan_id} for updates"
         }
     
     except HTTPException:
