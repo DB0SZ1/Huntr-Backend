@@ -97,9 +97,8 @@ async def get_weekly_top_20(
                     logger.info(f"Cache miss for niche {niche['name']} - scraping...")
                     
                     try:
-                        result = await asyncio.to_thread(
-                            lambda: scrape_platforms_for_user(platforms, max_concurrent=2)
-                        )
+                        # scrape_platforms_for_user is async, call it directly without to_thread
+                        result = await scrape_platforms_for_user(platforms, max_concurrent=2)
                         
                         opportunities = result.get('opportunities', [])
                         all_opportunities.extend(opportunities)
