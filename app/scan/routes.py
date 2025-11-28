@@ -9,6 +9,7 @@ from bson.objectid import ObjectId
 from datetime import datetime, timedelta
 import uuid
 import asyncio
+import time
 
 from app.database.connection import get_database, check_database_health
 from app.auth.oauth import get_current_user
@@ -98,7 +99,7 @@ async def perform_scan_background(
                     user_opp = {
                         "user_id": user_id,
                         "scan_id": scan_id,
-                        "external_id": opp.get("id"),
+                        "external_id": opp.get("id", f"opp_{int(time.time())}_{stored_count}"),
                         "title": title,
                         "description": opp.get("description", "")[:500],
                         "platform": opp.get("platform", "Unknown"),
@@ -116,8 +117,18 @@ async def perform_scan_background(
                         "notes": "",
                         "match_score": 0
                     }
-                    await db.user_opportunities.insert_one(user_opp)
-                    stored_count += 1
+                    
+                    # Check for duplicate before inserting
+                    existing = await db.user_opportunities.find_one({
+                        "user_id": user_id,
+                        "external_id": user_opp.get("external_id")
+                    })
+                    
+                    if not existing:
+                        await db.user_opportunities.insert_one(user_opp)
+                        stored_count += 1
+                    else:
+                        logger.debug(f"[SCAN] Skipping duplicate opportunity: {user_opp.get('external_id')}")
             except Exception as e:
                 logger.warning(f"[SCAN] Failed to store opportunity: {str(e)}")
         
