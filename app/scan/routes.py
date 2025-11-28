@@ -148,7 +148,7 @@ async def start_scan(
             "tier": user_tier
         })
         
-        # ✅ STEP 9: Create scan record
+        # ✅ STEP 9: Create scan record in both collections for tracking
         scan_record = {
             "user_id": user_id,
             "status": "running",
@@ -158,6 +158,19 @@ async def start_scan(
         }
         
         result = await db.scans.insert_one(scan_record)
+        scan_id = str(result.inserted_id)
+        
+        # Also store in scan_history for status tracking (with string scan_id)
+        await db.scan_history.insert_one({
+            "scan_id": scan_id,  # Use string ID for easy lookup
+            "user_id": user_id,
+            "status": "running",
+            "credits_used": CREDITS_REQUIRED,
+            "started_at": now,
+            "opportunities_found": 0,
+            "platforms_scanned": [],
+            "results": []
+        })
         
         logger.info(f"Scan started for user {user_id}: {CREDITS_REQUIRED} credits deducted (tier: {user_tier})")
         
@@ -181,13 +194,18 @@ async def start_scan(
 @router.get("/status/{scan_id}")
 async def get_scan_status(
     scan_id: str,
-    user_id: str = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_database)
 ):
     """
     Get status of a scan (only own scans)
     """
     try:
+        # Get user_id from current_user dict
+        user_id = current_user.get("id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found in session")
+        
         scan = await db.scan_history.find_one({
             "scan_id": scan_id,
             "user_id": user_id  # ✅ Only own scans
@@ -215,7 +233,7 @@ async def get_scan_status(
 
 @router.get("/history")
 async def get_scan_history(
-    user_id: str = Depends(get_current_user),
+    current_user: dict = Depends(get_current_user),
     db: AsyncIOMotorDatabase = Depends(get_database),
     limit: int = 20
 ):
@@ -223,6 +241,11 @@ async def get_scan_history(
     Get user's scan history (only own scans)
     """
     try:
+        # Get user_id from current_user dict
+        user_id = current_user.get("id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found in session")
+        
         scans = await db.scan_history.find({
             "user_id": user_id  # ✅ Only own scans
         }).sort("started_at", -1).limit(limit).to_list(length=limit)

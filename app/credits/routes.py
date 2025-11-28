@@ -179,6 +179,87 @@ async def get_credit_balance(
         raise HTTPException(status_code=500, detail="Failed to get credit balance")
 
 
+@router.get("/balance/realtime")
+async def get_realtime_balance(
+    user_id: str = Depends(get_current_user_id),
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
+    """
+    Get real-time credit balance (no caching)
+    Updates immediately when credits are deducted
+    Automatically resets if 24 hours have passed
+    """
+    try:
+        # Get user and tier
+        user = await db.users.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        tier = user.get("tier", "free")
+        daily_credits = TIER_LIMITS.get(tier, {}).get("daily_credits", 10)
+        
+        # Get fresh credit record from database (no caching)
+        credit_record = await db.user_credits.find_one({"user_id": user_id})
+        
+        if not credit_record:
+            # Initialize if doesn't exist
+            await initialize_user_credits(db, user_id)
+            credit_record = await db.user_credits.find_one({"user_id": user_id})
+        
+        # Check if daily reset is needed
+        now = datetime.utcnow()
+        last_refill = credit_record.get("last_refill")
+        
+        # Auto-reset if 24+ hours have passed
+        if last_refill:
+            time_elapsed = (now - last_refill).total_seconds()
+            if time_elapsed >= 86400:
+                # Reset credits
+                await db.user_credits.update_one(
+                    {"user_id": user_id},
+                    {
+                        "$set": {
+                            "current_credits": daily_credits,
+                            "daily_credits": daily_credits,
+                            "daily_credits_used": 0,
+                            "last_refill": now,
+                            "next_refill": now + timedelta(days=1),
+                            "tier": tier,
+                            "updated_at": now
+                        }
+                    }
+                )
+                # Get fresh record after reset
+                credit_record = await db.user_credits.find_one({"user_id": user_id})
+                logger.info(f"[REALTIME] Auto-reset credits for user {user_id}")
+        
+        # Calculate next refill
+        last_refill = credit_record.get("last_refill", now)
+        next_refill = last_refill + timedelta(days=1)
+        seconds_until_refill = (next_refill - now).total_seconds()
+        hours_until_refill = max(0, round(seconds_until_refill / 3600))
+        minutes_until_refill = max(0, round(seconds_until_refill / 60))
+        
+        return {
+            "current_credits": credit_record.get("current_credits", daily_credits),
+            "daily_credits": daily_credits,
+            "daily_credits_used": credit_record.get("daily_credits_used", 0),
+            "tier": tier,
+            "total_used": credit_record.get("total_credits_used", 0),
+            "total_purchased": credit_record.get("total_credits_purchased", 0),
+            "next_refill": next_refill.isoformat(),
+            "hours_until_refill": hours_until_refill,
+            "minutes_until_refill": minutes_until_refill,
+            "updated_at": datetime.utcnow().isoformat(),
+            "cache_expiry": None  # Always fresh, no caching
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting realtime credit balance: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get realtime credit balance")
+
+
 @router.get("/summary")
 async def get_credit_summary(
     user_id: str = Depends(get_current_user_id),
