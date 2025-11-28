@@ -95,13 +95,25 @@ async def get_credit_balance(
             last_refill = credit_record.get("last_refill", datetime.utcnow())
             now = datetime.utcnow()
             
-            if (now - last_refill).days >= 1:
+            # Calculate time elapsed since last refill (in seconds)
+            time_elapsed = (now - last_refill).total_seconds()
+            
+            # Reset if more than 24 hours (86400 seconds) have passed
+            if time_elapsed >= 86400:
                 await db.user_credits.update_one(
                     {"user_id": user_id},
-                    {"$set": {"current_credits": daily_credits, "last_refill": now}}
+                    {"$set": {
+                        "current_credits": daily_credits,
+                        "daily_credits": daily_credits,
+                        "daily_credits_used": 0,
+                        "last_refill": now,
+                        "next_refill": now + timedelta(days=1),
+                        "tier": tier,
+                        "updated_at": now
+                    }}
                 )
-                credit_record["current_credits"] = daily_credits
-                credit_record["last_refill"] = now
+                # Get fresh record after reset
+                credit_record = await db.user_credits.find_one({"user_id": user_id})
                 logger.info(f"Credits refilled for user {user_id}: {daily_credits}")
         
         last_refill = credit_record.get("last_refill", datetime.utcnow())
@@ -153,13 +165,25 @@ async def get_credit_summary(
             last_refill = credit_record.get("last_refill", datetime.utcnow())
             now = datetime.utcnow()
             
-            if (now - last_refill).days >= 1:
+            # Calculate time elapsed since last refill (in seconds)
+            time_elapsed = (now - last_refill).total_seconds()
+            
+            # Reset if more than 24 hours (86400 seconds) have passed
+            if time_elapsed >= 86400:
                 await db.user_credits.update_one(
                     {"user_id": user_id},
-                    {"$set": {"current_credits": daily_credits, "last_refill": now}}
+                    {"$set": {
+                        "current_credits": daily_credits,
+                        "daily_credits": daily_credits,
+                        "daily_credits_used": 0,
+                        "last_refill": now,
+                        "next_refill": now + timedelta(days=1),
+                        "tier": tier,
+                        "updated_at": now
+                    }}
                 )
-                credit_record["current_credits"] = daily_credits
-                credit_record["last_refill"] = now
+                # Get fresh record after reset
+                credit_record = await db.user_credits.find_one({"user_id": user_id})
         
         last_refill = credit_record.get("last_refill", datetime.utcnow())
         now = datetime.utcnow()

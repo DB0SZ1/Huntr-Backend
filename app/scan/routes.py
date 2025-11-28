@@ -58,8 +58,11 @@ async def start_scan(
         now = datetime.utcnow()
         last_refill = credit_record.get("last_refill", now)
         
-        # Reset if more than 24 hours have passed
-        if (now - last_refill).days >= 1 or (now - last_refill).total_seconds() >= 86400:
+        # Calculate time elapsed since last refill
+        time_elapsed = (now - last_refill).total_seconds()
+        
+        # Reset if more than 24 hours (86400 seconds) have passed
+        if time_elapsed >= 86400:
             await db.user_credits.update_one(
                 {"user_id": user_id},
                 {
@@ -74,8 +77,9 @@ async def start_scan(
                     }
                 }
             )
-            credit_record = await db.user_credits.find_one({"user_id": user_id})
             logger.info(f"Credits reset for user {user_id}: {daily_credits} credits (tier: {user_tier})")
+            # Get fresh record after reset
+            credit_record = await db.user_credits.find_one({"user_id": user_id})
         
         # ✅ STEP 5: Get current available credits
         available_credits = credit_record.get("current_credits", 0)
