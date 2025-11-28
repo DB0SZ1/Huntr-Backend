@@ -56,13 +56,35 @@ async def start_scan(
         
         # ✅ STEP 4: Check if daily reset is needed
         now = datetime.utcnow()
-        last_refill = credit_record.get("last_refill", now)
+        last_refill = credit_record.get("last_refill")
+        current_credits = credit_record.get("current_credits", 0)
         
-        # Calculate time elapsed since last refill
-        time_elapsed = (now - last_refill).total_seconds()
+        # Determine if we need to reset credits
+        needs_reset = False
         
-        # Reset if more than 24 hours (86400 seconds) have passed
-        if time_elapsed >= 86400:
+        if last_refill is None:
+            # First time setup
+            needs_reset = True
+        else:
+            # Calculate time elapsed since last refill
+            time_elapsed = (now - last_refill).total_seconds()
+            
+            # Reset if more than 24 hours (86400 seconds) have passed
+            if time_elapsed >= 86400:
+                needs_reset = True
+        
+        # Also reset if current_credits is 0 and we haven't reset today
+        if current_credits == 0 and not needs_reset:
+            if last_refill is not None:
+                time_elapsed = (now - last_refill).total_seconds()
+                # If less than 24 hours but credits are 0, likely used all credits today
+                # Don't reset - user has to wait 24 hours
+                pass
+            else:
+                # First time, no last_refill, reset
+                needs_reset = True
+        
+        if needs_reset:
             await db.user_credits.update_one(
                 {"user_id": user_id},
                 {

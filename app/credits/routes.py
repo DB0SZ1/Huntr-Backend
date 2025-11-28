@@ -22,13 +22,9 @@ async def initialize_user_credits(db, user_id: str):
     """
     Initialize credits for a new user based on their tier from TIER_LIMITS config
     Creates user_credits record with tier-based daily allocation
+    Also repairs broken records (e.g., 0 current_credits)
     """
     try:
-        # Check if user_credits already exists
-        existing = await db.user_credits.find_one({"user_id": user_id})
-        if existing:
-            return  # Already initialized
-        
         # Get user's tier from database
         try:
             user = await db.users.find_one({"_id": ObjectId(user_id)})
@@ -39,7 +35,54 @@ async def initialize_user_credits(db, user_id: str):
         # Get daily credits from TIER_LIMITS config
         daily_credits = TIER_LIMITS.get(user_tier, {}).get("daily_credits", 10)
         
-        # Initialize user_credits with tier-based daily limit
+        # Check if user_credits already exists
+        existing = await db.user_credits.find_one({"user_id": user_id})
+        
+        if existing:
+            # Record exists - check if it needs repair
+            current_credits = existing.get("current_credits", 0)
+            
+            # If current_credits is 0 and it's never been set properly, repair it
+            if current_credits == 0 and existing.get("daily_credits") != daily_credits:
+                # Tier changed or corrupted record - repair it
+                now = datetime.utcnow()
+                await db.user_credits.update_one(
+                    {"user_id": user_id},
+                    {
+                        "$set": {
+                            "current_credits": daily_credits,
+                            "daily_credits": daily_credits,
+                            "daily_credits_used": 0,
+                            "last_refill": now,
+                            "next_refill": now + timedelta(days=1),
+                            "tier": user_tier,
+                            "updated_at": now
+                        }
+                    }
+                )
+                logger.info(f"Repaired credit record for user {user_id} (tier: {user_tier}, daily: {daily_credits})")
+            elif current_credits == 0 and not existing.get("last_refill"):
+                # No last_refill set - initialize it
+                now = datetime.utcnow()
+                await db.user_credits.update_one(
+                    {"user_id": user_id},
+                    {
+                        "$set": {
+                            "current_credits": daily_credits,
+                            "daily_credits": daily_credits,
+                            "daily_credits_used": 0,
+                            "last_refill": now,
+                            "next_refill": now + timedelta(days=1),
+                            "tier": user_tier,
+                            "updated_at": now
+                        }
+                    }
+                )
+                logger.info(f"Fixed uninitialized credit record for user {user_id} (tier: {user_tier}, daily: {daily_credits})")
+            
+            return  # Already exists (and potentially fixed)
+        
+        # Create new record
         now = datetime.utcnow()
         await db.user_credits.insert_one({
             "user_id": user_id,
