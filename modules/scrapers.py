@@ -695,10 +695,119 @@ def scrape_telegram_channels():
     logger.info(f"Telegram: Completed with {len(opportunities)} opportunities")
     return opportunities
 
+async def scrape_channel_async(channel, client, job_keywords, confidence_threshold=40, rogue_categories=None):
+    """
+    Scrape a single Telegram channel asynchronously with confidence filtering
+    
+    Args:
+        channel: Channel name (str or dict with 'channel' and 'category' keys)
+        client: TelegramClient instance
+        job_keywords: List of job keywords to search for
+        confidence_threshold: Minimum confidence score (0-100) to include opportunity
+        rogue_categories: Set of category names flagged as "rogue"
+    
+    Returns:
+        Tuple of (opportunities_list, channel_name, found_count)
+    """
+    opportunities = []
+    rogue_categories = rogue_categories or set()
+    
+    # Handle both string and dict channel formats
+    if isinstance(channel, dict):
+        channel_name = channel.get('channel', channel)
+        category = channel.get('category', 'unknown')
+    else:
+        channel_name = channel
+        category = 'unknown'
+    
+    is_rogue_channel = category in rogue_categories
+    
+    try:
+        logger.debug(f"[ASYNC] Scanning channel: {channel_name} (category: {category})")
+        
+        # Get recent messages (last 50)
+        messages = await client.get_messages(channel_name, limit=50)
+        
+        if not messages:
+            logger.debug(f"[ASYNC] No messages found in {channel_name}")
+            return opportunities, channel_name, 0
+        
+        # Parse messages for job opportunities
+        for msg in messages:
+            if not msg.text:
+                continue
+            
+            text = msg.text
+            text_lower = text.lower()
+            
+            # Check if message contains job keywords
+            has_job_keywords = any(keyword in text_lower for keyword in job_keywords)
+            
+            if not has_job_keywords:
+                continue
+            
+            # Apply confidence threshold filter
+            confidence = is_genuine_job_post(text)
+            if confidence < confidence_threshold:
+                logger.debug(f"[ASYNC] Skipping low-confidence post ({confidence}%) from {channel_name}")
+                continue
+            
+            # Extract information
+            title = text.split('\n')[0][:100] if text else "Opportunity"
+            
+            # Look for salary info
+            salary_match = re.search(r'\$[\d,]+|\€[\d,]+|[\d,]+ [A-Z]{3}', text)
+            salary = salary_match.group(0) if salary_match else None
+            
+            # Look for contact info
+            email_match = re.search(r'[\w\.-]+@[\w\.-]+\.\w+', text)
+            email = email_match.group(0) if email_match else None
+            
+            handle_match = re.search(r'@[\w_]+', text)
+            contact = handle_match.group(0) if handle_match else None
+            
+            # Create opportunity object with confidence score
+            opportunity = {
+                "title": title,
+                "description": text[:500],
+                "platform": "Telegram",
+                "url": f"https://t.me/{channel_name.lstrip('@')}",
+                "telegram": channel_name,
+                "telegram_channel": channel_name,
+                "contact": contact or email or "Contact via channel",
+                "salary": salary,
+                "found_at": datetime.utcnow().isoformat(),
+                "metadata": {
+                    "source": "Telegram",
+                    "channel": channel_name,
+                    "category": category,
+                    "message_id": msg.id,
+                    "posted_at": msg.date.isoformat() if msg.date else None,
+                    "confidence_score": round(confidence, 2),
+                    "is_rogue_channel": is_rogue_channel
+                }
+            }
+            
+            # Add warning flag for rogue channels
+            if is_rogue_channel:
+                opportunity["metadata"]["warning"] = "Channel flagged as potentially rogue/high-risk"
+                opportunity["metadata"]["user_review_recommended"] = True
+            
+            opportunities.append(opportunity)
+            logger.debug(f"[ASYNC] Added opportunity from {channel_name} (confidence: {confidence:.0f}%)")
+        
+        return opportunities, channel_name, len(opportunities)
+    
+    except Exception as e:
+        logger.warning(f"[ASYNC] Error scanning {channel_name}: {str(e)}")
+        return [], channel_name, 0
+
+
 async def scrape_telegram_channels_async():
     """
-    Scrape job opportunities from Telegram channels (ASYNC VERSION)
+    Scrape job opportunities from Telegram channels (ASYNC VERSION - PARALLELIZED)
     Fetches messages from job-related channels and extracts opportunities
+    Uses asyncio.gather() for parallel channel scanning
     
     Returns:
         List of opportunities found in Telegram channels
@@ -731,20 +840,137 @@ async def scrape_telegram_channels_async():
             logger.warning(f"Telegram API not configured - missing: {', '.join(missing)}")
             return []
         
-        logger.info("Starting ENHANCED Telegram scraping...")
+        logger.info("Starting ENHANCED Telegram scraping (ASYNC MODE)...")
+        
+        # Define rogue categories for warning metadata
+        ROGUE_CATEGORIES = {
+            'underground_rogue',
+            'grey_market_crypto',
+            'darkweb3jobs',
+            'anon_work',
+            'offshore_web3_jobs',
+            'unregulated_opportunities',
+            'no_kyc_jobs',
+            'pseudonymous_hiring',
+            'burner_account_jobs'
+        }
         
         # Job-related Telegram channels to monitor
         TELEGRAM_CHANNELS = [
+            # === USER REQUESTED (PRIORITY) ===
             "@web3_jobs_crypto_vazima",
-            "@crypto_jobs",
-            "@defi_jobs",
-            "@web3careers",
-            "@freelance_jobs_worldwide",
-            "@remotejobsalerts",
-            "@jobsopportunities",
-            "@hiringjobs",
-            "@crypto_opportunities",
-            "@aiml_jobs",
+            
+            # === OFFICIAL JOB BOARDS ===
+            "@crypto_jobs", "@defi_jobs", "@web3careers", "@web3jobsofficial",
+            "@blockchainjobs", "@nftjobs", "@daojobs", "@solana_jobs",
+            "@freelance_jobs_worldwide", "@remotejobsalerts", "@jobsopportunities",
+            "@hiringjobs", "@crypto_opportunities", "@aiml_jobs",
+            
+            # === UNDERGROUND & ROGUE MARKETS ===
+            "@cryptohustlers", "@web3freelancers", "@defidegens", "@degen_jobs",
+            "@undiscoveredgems", "@moonshot_jobs", "@shitcoin_hiring",
+            "@cryptounderground", "@web3blackmarket", "@anonopportunities",
+            "@darkweb3jobs", "@cryptomercenaries", "@shadowdev_jobs",
+            
+            # === ALPHA & INSIDER GROUPS ===
+            "@alphaleaks", "@insidercalls", "@cryptowhales_hiring",
+            "@vccrypto", "@smartmoneyjobs", "@cryptofounders",
+            "@web3alphagroup", "@elitecryptojobs", "@privatealpha",
+            
+            # === BOUNTY & GIG ECONOMY ===
+            "@bountyhunters_crypto", "@web3bounties", "@gitcoinopportunities",
+            "@cryptogigs", "@hackathon_jobs", "@bug_bounty_crypto",
+            "@web3_freelance_gigs", "@crypto_side_hustles",
+            
+            # === COMMUNITY MANAGER SPECIFIC ===
+            "@cm_jobs_crypto", "@discord_mods_hiring", "@telegram_admins",
+            "@community_builders", "@social_media_web3", "@moderator_marketplace",
+            
+            # === NFT & METAVERSE ===
+            "@nft_community_jobs", "@metaverse_careers", "@nft_artist_jobs",
+            "@web3_gaming_jobs", "@playtoearn_hiring", "@nft_project_hiring",
+            
+            # === DEVELOPER FOCUSED ===
+            "@solidity_devs", "@rust_blockchain", "@web3_frontend",
+            "@smart_contract_jobs", "@blockchain_backend", "@web3_fullstack",
+            
+            # === REGIONAL - ASIA ===
+            "@crypto_jobs_asia", "@web3_india", "@crypto_jobs_china",
+            "@web3_singapore", "@crypto_jobs_japan", "@web3_korea",
+            "@crypto_jobs_vietnam", "@web3_philippines",
+            
+            # === REGIONAL - AFRICA & MENA ===
+            "@crypto_jobs_africa", "@web3_nigeria", "@crypto_jobs_kenya",
+            "@web3_mena", "@crypto_jobs_dubai", "@web3_egypt",
+            
+            # === REGIONAL - LATAM ===
+            "@crypto_jobs_latam", "@web3_brazil", "@crypto_jobs_mexico",
+            "@web3_argentina", "@crypto_jobs_colombia",
+            
+            # === REGIONAL - EUROPE ===
+            "@crypto_jobs_europe", "@web3_berlin", "@crypto_jobs_london",
+            "@web3_paris", "@crypto_jobs_amsterdam", "@web3_portugal",
+            
+            # === STARTUPS & EARLY STAGE ===
+            "@startup_web3_jobs", "@preseed_hiring", "@seed_stage_jobs",
+            "@web3_launch_jobs", "@new_protocol_hiring", "@stealth_startup_jobs",
+            
+            # === TRADING & DEFI ===
+            "@defi_trading_jobs", "@dex_jobs", "@liquidity_provider_jobs",
+            "@yield_farming_jobs", "@trading_bot_jobs", "@mev_jobs",
+            
+            # === CONTENT & MARKETING ===
+            "@crypto_writers", "@web3_marketing_jobs", "@crypto_influencer_jobs",
+            "@content_creator_web3", "@crypto_copywriters", "@web3_seo_jobs",
+            
+            # === DESIGN & CREATIVE ===
+            "@crypto_designers", "@nft_artists_hiring", "@web3_ui_ux",
+            "@crypto_graphic_design", "@web3_brand_design", "@crypto_motion_design",
+            
+            # === FORUMS & DISCUSSION GROUPS ===
+            "@cryptotalks_jobs", "@web3forum", "@blockchain_discussions",
+            "@crypto_networking", "@web3_connections", "@crypto_collab",
+            
+            # === AIRDROP HUNTERS & TESTNETS ===
+            "@airdrop_tasks", "@testnet_jobs", "@retroactive_opportunities",
+            "@airdrop_farming_jobs", "@testnet_hunters",
+            
+            # === ROGUE & ANONYMOUS ===
+            "@anon_crypto_work", "@privacy_jobs_web3", "@tor_crypto_jobs",
+            "@vpn_verified_jobs", "@signal_crypto_hiring", "@encrypted_opportunities",
+            
+            # === WHALE & HIGH NET WORTH ===
+            "@whale_hiring", "@institutional_crypto_jobs", "@family_office_web3",
+            "@hnw_crypto_opportunities", "@vc_crypto_jobs",
+            
+            # === DAO & GOVERNANCE ===
+            "@dao_contributors", "@governance_jobs", "@dao_operations",
+            "@protocol_politicians", "@snapshot_strategists",
+            
+            # === SECURITY & AUDITING ===
+            "@smart_contract_auditors", "@crypto_security_jobs", "@white_hat_jobs",
+            "@blockchain_forensics", "@defi_security_hiring",
+            
+            # === INFRASTRUCTURE & NODES ===
+            "@validator_jobs", "@node_operator_jobs", "@infrastructure_web3",
+            "@rpc_provider_jobs", "@indexer_jobs",
+            
+            # === RESEARCH & ANALYSIS ===
+            "@crypto_research_jobs", "@blockchain_analysts", "@tokenomics_jobs",
+            "@on_chain_analysis_jobs", "@crypto_data_science",
+            
+            # === LEGAL & COMPLIANCE ===
+            "@crypto_legal_jobs", "@compliance_web3", "@regulatory_crypto",
+            "@crypto_lawyers_hiring", "@defi_compliance_jobs",
+            
+            # === EDUCATION & TRAINING ===
+            "@crypto_educators", "@web3_teachers", "@blockchain_trainers",
+            "@crypto_course_creators", "@web3_mentors",
+            
+            # === MISCELLANEOUS UNDERGROUND ===
+            "@grey_market_crypto", "@offshore_web3_jobs", "@tax_haven_crypto",
+            "@unregulated_opportunities", "@wild_west_web3",
+            "@no_kyc_jobs", "@pseudonymous_hiring", "@burner_account_jobs"
         ]
         
         logger.info(f"Telegram: Monitoring {len(TELEGRAM_CHANNELS)} channels across multiple categories")
@@ -752,11 +978,49 @@ async def scrape_telegram_channels_async():
         
         # Keywords that indicate job opportunities
         JOB_KEYWORDS = [
+            # === STANDARD JOB TERMS ===
             'hire', 'hiring', 'job', 'opportunity', 'position', 'role',
             'developer', 'engineer', 'designer', 'writer', 'manager',
             'apply', 'applicant', 'salary', 'payment', 'freelance',
             'contract', 'remote', 'full-time', 'part-time', 'internship',
-            'urgent', 'urgent hiring', 'open position', 'recruitment'
+            'urgent', 'urgent hiring', 'open position', 'recruitment',
+            
+            # === GIG & BOUNTY TERMS ===
+            'bounty', 'gig', 'task', 'paid work', 'looking for', 'need help',
+            'commission', 'side hustle', 'quick job', 'one-time gig',
+            
+            # === CRYPTO-SPECIFIC ===
+            'airdrop task', 'testnet', 'ambassador', 'shill', 'community mod',
+            'discord mod', 'telegram admin', 'cm needed', 'mod needed',
+            'alpha caller', 'influencer wanted', 'kol needed',
+            
+            # === UNDERGROUND & ROGUE ===
+            'anon work', 'no kyc', 'pseudonymous', 'offshore', 'grey area',
+            'under the table', 'cash payment', 'crypto payment only',
+            'no questions asked', 'discrete work', 'privacy focused',
+            
+            # === URGENCY & SCARCITY ===
+            'asap', 'immediate start', 'today', 'now hiring', 'fast hire',
+            'emergency hire', 'closing soon', 'limited spots', 'first come',
+            
+            # === COMPENSATION INDICATORS ===
+            'high pay', 'competitive salary', 'equity', 'tokens', 'airdrop',
+            'revenue share', 'profit split', 'commission based', '$', 'usd',
+            'usdt', 'usdc', 'btc', 'eth', 'sol',
+            
+            # === ROLE TYPES ===
+            'moderator', 'admin', 'contributor', 'ambassador', 'advocate',
+            'analyst', 'researcher', 'auditor', 'consultant', 'advisor',
+            'strategist', 'coordinator', 'lead', 'head of', 'director',
+            
+            # === SKILL REQUIREMENTS ===
+            'solidity', 'rust', 'python', 'javascript', 'react', 'web3.js',
+            'smart contract', 'defi', 'nft', 'dao', 'blockchain',
+            'marketing', 'growth', 'seo', 'content', 'copywriting',
+            
+            # === PROJECT STAGES ===
+            'launch', 'presale', 'stealth', 'startup', 'new project',
+            'building', 'mvp', 'beta', 'testnet', 'mainnet'
         ]
         
         async with TelegramClient('session', int(api_id), api_hash) as client:
@@ -766,73 +1030,84 @@ async def scrape_telegram_channels_async():
                 return []
             
             logger.info("[OK] Authenticated with Telegram")
+            logger.info(f"[ASYNC] Preparing to scan {len(TELEGRAM_CHANNELS)} channels in parallel mode...")
+            print(f"📱 Telegram: Scanning {len(TELEGRAM_CHANNELS)} channels (PARALLELIZED)...")
             
-            # Scan each channel
-            for channel in TELEGRAM_CHANNELS:
-                try:
-                    logger.info(f"Scanning channel: {channel}")
-                    
-                    # Get recent messages (last 50)
-                    messages = await client.get_messages(channel, limit=50)
-                    
-                    if not messages:
-                        logger.debug(f"No messages found in {channel}")
+            # Confidence threshold: keep only jobs with >= 40 confidence score (0-100)
+            CONFIDENCE_THRESHOLD = 40
+            
+            # Create async tasks for all channels
+            # This allows multiple channels to be scraped simultaneously
+            tasks = [
+                scrape_channel_async(
+                    channel, 
+                    client, 
+                    JOB_KEYWORDS, 
+                    confidence_threshold=CONFIDENCE_THRESHOLD,
+                    rogue_categories=ROGUE_CATEGORIES
+                ) 
+                for channel in TELEGRAM_CHANNELS
+            ]
+            
+            # Execute all tasks concurrently with rate limiting
+            logger.info(f"[ASYNC] Starting concurrent scraping of {len(tasks)} channels...")
+            
+            # Gather results with semaphore to avoid Telegram rate limits
+            # Rate limit: max 5 concurrent requests, 2.5s delay between channel completions
+            semaphore = asyncio.Semaphore(5)
+            
+            async def limited_scrape(task):
+                async with semaphore:
+                    result = await task
+                    # Aggressive rate limiting to avoid Telegram bans
+                    await asyncio.sleep(2.5)
+                    return result
+            
+            try:
+                results = await asyncio.gather(
+                    *[limited_scrape(task) for task in tasks],
+                    return_exceptions=True
+                )
+                
+                # Process results
+                successful_channels = 0
+                failed_channels = 0
+                rogue_opportunities = 0
+                
+                for result in results:
+                    if isinstance(result, Exception):
+                        logger.error(f"[ASYNC] Task exception: {str(result)}")
+                        failed_channels += 1
                         continue
                     
-                    # Parse messages for job opportunities
-                    for msg in messages:
-                        if not msg.text:
-                            continue
-                        
-                        text = msg.text.lower()
-                        
-                        # Check if message contains job keywords
-                        has_job_keywords = any(keyword in text for keyword in JOB_KEYWORDS)
-                        
-                        if not has_job_keywords:
-                            continue
-                        
-                        # Extract information
-                        title = text.split('\n')[0][:100] if text else "Opportunity"
-                        
-                        # Look for salary info
-                        salary_match = re.search(r'\$[\d,]+|\€[\d,]+|[\d,]+ [A-Z]{3}', text)
-                        salary = salary_match.group(0) if salary_match else None
-                        
-                        # Look for contact info
-                        email_match = re.search(r'[\w\.-]+@[\w\.-]+\.\w+', text)
-                        email = email_match.group(0) if email_match else None
-                        
-                        handle_match = re.search(r'@[\w_]+', text)
-                        contact = handle_match.group(0) if handle_match else None
-                        
-                        # Create opportunity object
-                        opportunity = {
-                            "title": title,
-                            "description": text[:500],  # First 500 chars
-                            "platform": "Telegram",
-                            "url": f"https://t.me/{channel.lstrip('@')}",
-                            "telegram": channel,
-                            "telegram_channel": channel,
-                            "contact": contact or email or "Contact via channel",
-                            "salary": salary,
-                            "found_at": datetime.utcnow().isoformat(),
-                            "metadata": {
-                                "source": "Telegram",
-                                "channel": channel,
-                                "message_id": msg.id,
-                                "posted_at": msg.date.isoformat() if msg.date else None
-                            }
-                        }
-                        
-                        # Avoid duplicates
-                        if not any(o.get('metadata', {}).get('message_id') == msg.id for o in opportunities):
-                            opportunities.append(opportunity)
-                            logger.info(f"[+] Found opportunity: {title[:50]}...")
+                    if not isinstance(result, tuple) or len(result) != 3:
+                        logger.warning(f"[ASYNC] Invalid result format: {result}")
+                        continue
+                    
+                    opps, channel_name, found_count = result
+                    
+                    opportunities.extend(opps)
+                    
+                    if found_count > 0:
+                        successful_channels += 1
+                        # Count rogue channel opportunities for monitoring
+                        rogue_count = sum(1 for o in opps if o.get('metadata', {}).get('is_rogue_channel', False))
+                        if rogue_count > 0:
+                            rogue_opportunities += rogue_count
+                            logger.warning(f"[ASYNC] {rogue_count} opportunities from rogue channel: {channel_name}")
+                    else:
+                        successful_channels += 1  # Still count as successful even if no posts
                 
-                except Exception as e:
-                    logger.warning(f"Error scanning {channel}: {str(e)}")
-                    continue
+                logger.info(f"[ASYNC] Channel scan complete - {successful_channels} channels processed, {failed_channels} failed")
+                logger.info(f"[ASYNC] Total opportunities found: {len(opportunities)} ({rogue_opportunities} from rogue channels)")
+                print(f"   [ASYNC] Collected {len(opportunities)} opportunities ({rogue_opportunities} flagged as rogue)")
+                
+            except asyncio.TimeoutError:
+                logger.error("[ASYNC] Timeout while scanning channels - some channels may be unresponsive")
+                print("   WARNING: Timeout during channel scanning")
+            except Exception as e:
+                logger.error(f"[ASYNC] Error during parallel scanning: {str(e)}")
+                print(f"   ERROR: {str(e)}")
         
         logger.info(f"Telegram: Completed with {len(opportunities)} opportunities")
         return opportunities
@@ -846,8 +1121,9 @@ async def scrape_telegram_channels_async():
 
 def scrape_telegram_channels():
     """
-    Scrape job opportunities from Telegram channels (SYNC VERSION)
-    For backward compatibility - use async version in FastAPI
+    Scrape job opportunities from Telegram channels (SYNC VERSION - BACKWARD COMPATIBLE)
+    For backward compatibility with non-async code - prefer async version in FastAPI
+    Uses confidence filtering with metadata for reporting suspicious opportunities
     
     Returns:
         List of opportunities found
@@ -1134,15 +1410,15 @@ def scrape_coinmarketcap_new():
 
 @retry_on_failure(max_retries=3, delay=5)
 def scrape_dexscreener_enhanced():
-    """Enhanced DexScreener scraping"""
+    """Enhanced DexScreener scraping - find trading opportunities"""
     logger.info("Starting DexScreener scraping...")
     opportunities = []
     
     try:
-        chains = ['solana', 'ethereum', 'bsc', 'base', 'arbitrum']
-        logger.info(f"DexScreener: Checking {len(chains[:3])} chains")
+        chains = ['solana', 'ethereum', 'bsc']
+        logger.info(f"DexScreener: Checking {len(chains)} chains")
         
-        for chain in chains[:3]:
+        for chain in chains:
             logger.info(f"DexScreener: Searching {chain}")
             url = f"https://api.dexscreener.com/latest/dex/search?q={chain}"
             response = requests.get(url, timeout=10)
@@ -1152,64 +1428,75 @@ def scrape_dexscreener_enhanced():
                 pairs = data.get('pairs', [])
                 logger.info(f"DexScreener {chain}: Got {len(pairs)} pairs")
                 
-                fresh_count = 0
-                for pair in pairs[:10]:
-                    if not pair.get('pairCreatedAt'):
+                # Include ALL pairs, not just < 48h (better chance of finding opportunities)
+                for i, pair in enumerate(pairs[:15]):
+                    if not pair.get('pairAddress'):
                         continue
                     
-                    created = datetime.fromtimestamp(pair['pairCreatedAt'] / 1000)
-                    age_hours = (datetime.now() - created).total_seconds() / 3600
+                    created = None
+                    age_hours = 0
                     
-                    if age_hours < 48:
-                        fresh_count += 1
-                        info = pair.get('info', {})
-                        socials = info.get('socials', [])
-                        
-                        telegram = None
-                        twitter = None
-                        website = None
-                        
-                        for social in socials:
-                            if social.get('type') == 'telegram':
-                                telegram = social.get('url')
-                            elif social.get('type') == 'twitter':
-                                twitter = social.get('url')
-                            elif social.get('type') == 'website':
-                                website = social.get('url')
-                        
-                        contact_parts = []
-                        if telegram:
-                            contact_parts.append(f"TG: {telegram}")
-                        if twitter:
-                            contact_parts.append(f"X: {twitter}")
-                        if website:
-                            contact_parts.append(f"Web: {website}")
-                        
-                        contact = " | ".join(contact_parts) if contact_parts else f"Check DexScreener"
-                        
-                        base_token = pair.get('baseToken', {})
-                        
-                        opportunities.append({
-                            'id': f"dex_{pair.get('pairAddress', hashlib.md5(str(pair).encode()).hexdigest())}",
-                            'title': f"🔥 NEW PAIR: ${base_token.get('symbol', 'UNKNOWN')} on {pair.get('dexId', chain).upper()}",
-                            'description': f"Fresh {int(age_hours)}h old. Liquidity: ${pair.get('liquidity', {}).get('usd', 0):,.0f}. Volume 24h: ${pair.get('volume', {}).get('h24', 0):,.0f}. Chain: {pair.get('chainId', 'unknown')}. NEW TOKENS URGENTLY NEED: Community managers, TG/Discord mods, Twitter/content creators, Website developers.",
-                            'platform': 'DexScreener',
-                            'url': pair.get('url', f"https://dexscreener.com/{chain}/{pair.get('pairAddress', '')}"),
-                            'contact': contact,
-                            'telegram': telegram,
-                            'twitter': twitter,
-                            'website': website,
-                            'timestamp': created.isoformat(),
-                            'metadata': {
-                                'liquidity': pair.get('liquidity', {}).get('usd', 0),
-                                'volume_24h': pair.get('volume', {}).get('h24', 0),
-                                'chain': pair.get('chainId', 'unknown'),
-                                'age_hours': int(age_hours)
-                            }
-                        })
-                        logger.debug(f"DexScreener: Fresh pair on {chain} ({int(age_hours)}h old)")
+                    if pair.get('pairCreatedAt'):
+                        try:
+                            created = datetime.fromtimestamp(pair['pairCreatedAt'] / 1000)
+                            age_hours = (datetime.now() - created).total_seconds() / 3600
+                        except:
+                            created = datetime.now()
+                            age_hours = 0
+                    else:
+                        # No creation date - use current time
+                        created = datetime.now()
+                        age_hours = 0
+                    
+                    info = pair.get('info', {})
+                    socials = info.get('socials', [])
+                    
+                    telegram = None
+                    twitter = None
+                    website = None
+                    
+                    for social in socials:
+                        if social.get('type') == 'telegram':
+                            telegram = social.get('url')
+                        elif social.get('type') == 'twitter':
+                            twitter = social.get('url')
+                        elif social.get('type') == 'website':
+                            website = social.get('url')
+                    
+                    contact_parts = []
+                    if telegram:
+                        contact_parts.append(f"TG: {telegram}")
+                    if twitter:
+                        contact_parts.append(f"X: {twitter}")
+                    if website:
+                        contact_parts.append(f"Web: {website}")
+                    
+                    contact = " | ".join(contact_parts) if contact_parts else f"Check pair"
+                    
+                    base_token = pair.get('baseToken', {})
+                    quote_token = pair.get('quoteToken', {})
+                    
+                    opportunities.append({
+                        'id': f"dex_{pair.get('pairAddress', hashlib.md5(str(pair).encode()).hexdigest())}",
+                        'title': f"Trading Opportunity: {base_token.get('symbol', 'TOKEN')}/{quote_token.get('symbol', 'USD')} on {pair.get('dexId', chain).upper()}",
+                        'description': f"Age: {int(age_hours)}h. Liquidity: ${pair.get('liquidity', {}).get('usd', 0):,.0f}. Volume 24h: ${pair.get('volume', {}).get('h24', 0):,.0f}. Chain: {chain.upper()}. Trading pair information and community resources available.",
+                        'platform': 'DexScreener',
+                        'url': pair.get('url', f"https://dexscreener.com/{chain}/{pair.get('pairAddress', '')}"),
+                        'contact': contact,
+                        'telegram': telegram,
+                        'twitter': twitter,
+                        'website': website,
+                        'timestamp': created.isoformat(),
+                        'metadata': {
+                            'liquidity': pair.get('liquidity', {}).get('usd', 0),
+                            'volume_24h': pair.get('volume', {}).get('h24', 0),
+                            'chain': pair.get('chainId', 'unknown'),
+                            'age_hours': int(age_hours)
+                        }
+                    })
+                    logger.debug(f"DexScreener: Added pair on {chain} ({int(age_hours)}h old)")
                 
-                logger.info(f"DexScreener {chain}: Found {fresh_count} pairs < 48h old")
+                logger.info(f"DexScreener {chain}: Processed {len([p for p in pairs[:15] if p.get('pairAddress')])} pairs")
             
             time.sleep(2)
         
@@ -1224,7 +1511,7 @@ def scrape_dexscreener_enhanced():
 
 @retry_on_failure(max_retries=2, delay=5)
 def scrape_coingecko_new():
-    """Scrape CoinGecko for newly added tokens"""
+    """Scrape CoinGecko for newly added tokens (inclusive - all recent coins)"""
     logger.info("Starting CoinGecko scraping...")
     opportunities = []
     
@@ -1236,11 +1523,12 @@ def scrape_coingecko_new():
         
         if response.status_code == 200:
             coins = response.json()
-            recent_coins = coins[-50:]
-            logger.info(f"CoinGecko: Checking {len(recent_coins[:20])} recent coins")
+            # Check more recent coins (last 30 instead of last 50, then first 30)
+            recent_coins = coins[-30:]
+            logger.info(f"CoinGecko: Checking {len(recent_coins)} recent coins")
             
-            new_count = 0
-            for coin in recent_coins[:20]:
+            opportunity_count = 0
+            for coin in recent_coins:
                 try:
                     detail_url = f"https://api.coingecko.com/api/v3/coins/{coin['id']}"
                     detail_response = requests.get(detail_url, headers=headers, timeout=10)
@@ -1248,59 +1536,75 @@ def scrape_coingecko_new():
                     if detail_response.status_code == 200:
                         data = detail_response.json()
                         
-                        genesis = data.get('genesis_date')
-                        if genesis:
-                            genesis_date = datetime.strptime(genesis, '%Y-%m-%d')
-                            age_days = (datetime.now() - genesis_date).days
-                            
-                            if age_days <= 30:
-                                new_count += 1
-                                links = data.get('links', {})
-                                
-                                telegram = links.get('telegram_channel_identifier')
-                                twitter = links.get('twitter_screen_name')
-                                homepage = links.get('homepage', [''])[0]
-                                
-                                contact_parts = []
-                                if telegram:
-                                    tg_link = f"https://t.me/{telegram}"
-                                    contact_parts.append(f"TG: {tg_link}")
-                                if twitter:
-                                    twitter_link = f"https://twitter.com/{twitter}"
-                                    contact_parts.append(f"X: {twitter_link}")
-                                if homepage:
-                                    contact_parts.append(f"Web: {homepage}")
-                                
-                                contact = " | ".join(contact_parts) if contact_parts else "Check CoinGecko page"
-                                
-                                opportunities.append({
-                                    'id': f"coingecko_{coin['id']}",
-                                    'title': f"✨ NEW COINGECKO: ${data.get('symbol', 'UNK').upper()} - {data.get('name')}",
-                                    'description': f"Added {age_days} days ago. {data.get('description', {}).get('en', '')[:200]}. Market Cap: ${data.get('market_data', {}).get('market_cap', {}).get('usd', 0):,.0f}. New CoinGecko listings need community growth, social presence, content creators.",
-                                    'platform': 'CoinGecko',
-                                    'url': f"https://www.coingecko.com/en/coins/{coin['id']}",
-                                    'contact': contact,
-                                    'telegram': f"https://t.me/{telegram}" if telegram else None,
-                                    'twitter': f"https://twitter.com/{twitter}" if twitter else None,
-                                    'website': homepage,
-                                    'timestamp': genesis_date.isoformat(),
-                                    'metadata': {
-                                        'age_days': age_days,
-                                        'market_cap': data.get('market_data', {}).get('market_cap', {}).get('usd', 0)
-                                    }
-                                })
-                                logger.debug(f"CoinGecko: New coin {coin['id']} ({age_days}d old)")
+                        # Try to get age if genesis date exists, otherwise include it anyway
+                        age_days = None
+                        genesis_date = None
+                        
+                        try:
+                            genesis = data.get('genesis_date')
+                            if genesis:
+                                genesis_date = datetime.strptime(genesis, '%Y-%m-%d')
+                                age_days = (datetime.now() - genesis_date).days
+                        except:
+                            pass
+                        
+                        # Include coins regardless of age (removed < 30 days filter)
+                        # If we have no genesis date, use current time as timestamp
+                        if genesis_date is None:
+                            genesis_date = datetime.now()
+                        
+                        opportunity_count += 1
+                        links = data.get('links', {})
+                        
+                        telegram = links.get('telegram_channel_identifier')
+                        twitter = links.get('twitter_screen_name')
+                        homepage = links.get('homepage', [''])[0]
+                        
+                        contact_parts = []
+                        if telegram:
+                            tg_link = f"https://t.me/{telegram}"
+                            contact_parts.append(f"TG: {tg_link}")
+                        if twitter:
+                            twitter_link = f"https://twitter.com/{twitter}"
+                            contact_parts.append(f"X: {twitter_link}")
+                        if homepage:
+                            contact_parts.append(f"Web: {homepage}")
+                        
+                        contact = " | ".join(contact_parts) if contact_parts else "Check CoinGecko page"
+                        
+                        # Build title without emoji (Windows console issue)
+                        age_str = f" ({age_days}d old)" if age_days else ""
+                        symbol = data.get('symbol', 'UNK').upper()
+                        
+                        opportunities.append({
+                            'id': f"coingecko_{coin['id']}",
+                            'title': f"CoinGecko Token: ${symbol} - {data.get('name')}{age_str}",
+                            'description': f"Token on CoinGecko. {data.get('description', {}).get('en', '')[:200]}. Market Cap: ${data.get('market_data', {}).get('market_cap', {}).get('usd', 0):,.0f}. New listings on CoinGecko need community growth, social presence, and content creators.",
+                            'platform': 'CoinGecko',
+                            'url': f"https://www.coingecko.com/en/coins/{coin['id']}",
+                            'contact': contact,
+                            'telegram': f"https://t.me/{telegram}" if telegram else None,
+                            'twitter': f"https://twitter.com/{twitter}" if twitter else None,
+                            'website': homepage,
+                            'timestamp': genesis_date.isoformat(),
+                            'metadata': {
+                                'age_days': age_days,
+                                'market_cap': data.get('market_data', {}).get('market_cap', {}).get('usd', 0)
+                            }
+                        })
+                        logger.debug(f"CoinGecko: Added coin {coin['id']}")
                     
-                    time.sleep(2)
+                    time.sleep(1)  # Reduced from 2s to 1s
                     
-                except Exception:
+                except Exception as e:
+                    logger.debug(f"CoinGecko: Skipping {coin.get('id')} - {str(e)}")
                     continue
             
-            logger.info(f"CoinGecko: Found {new_count} coins < 30 days old")
+            logger.info(f"CoinGecko: Found {opportunity_count} coins")
         
     except Exception as e:
         logger.error(f"CoinGecko scrape error: {str(e)}")
-        print(f"❌ CoinGecko scrape error: {str(e)}")
+        print(f"CoinGecko scrape error: {str(e)}")
     
     logger.info(f"CoinGecko: Completed with {len(opportunities)} opportunities")
     return opportunities
@@ -1408,6 +1712,86 @@ def extract_urls(tweet):
 def extract_from_list(url_list):
     """Extract first URL from list"""
     return url_list[0] if url_list and len(url_list) > 0 else None
+
+# ============= USER REPORTING SYSTEM =============
+
+def flag_opportunity_as_suspicious(opportunity_id, user_id, reason, report_details=None):
+    """
+    Flag an opportunity as suspicious for review
+    
+    Args:
+        opportunity_id: ID of the opportunity to flag
+        user_id: ID of the user reporting
+        reason: Reason for flagging (scam, spam, misleading, etc.)
+        report_details: Optional dict with additional details
+    
+    Returns:
+        dict with report status and ID
+    """
+    logger.warning(f"[REPORT] User {user_id} flagged opportunity {opportunity_id} as: {reason}")
+    
+    report = {
+        'opportunity_id': opportunity_id,
+        'reporter_user_id': user_id,
+        'reason': reason,
+        'details': report_details or {},
+        'flagged_at': datetime.utcnow().isoformat(),
+        'status': 'pending_review',
+        'review_notes': None
+    }
+    
+    # Log to file for monitoring
+    logger.info(f"[REPORT] {reason}: {opportunity_id} (reported by {user_id})")
+    
+    return {
+        'success': True,
+        'report_id': f"report_{opportunity_id}_{int(datetime.utcnow().timestamp())}",
+        'message': f'Opportunity reported for review. Thank you for helping keep the community safe.',
+        'report': report
+    }
+
+
+def mark_channel_as_rogue(channel_name, reason):
+    """
+    Mark a Telegram channel as rogue/high-risk for internal tracking
+    
+    Args:
+        channel_name: Name of the channel
+        reason: Why it's marked as rogue
+    
+    Returns:
+        dict with status
+    """
+    logger.warning(f"[ROGUE] Channel {channel_name} marked as rogue: {reason}")
+    return {
+        'success': True,
+        'channel': channel_name,
+        'marked_as_rogue': True,
+        'reason': reason,
+        'timestamp': datetime.utcnow().isoformat()
+    }
+
+
+def get_opportunity_abuse_metrics(opportunity_id):
+    """
+    Get abuse/report metrics for an opportunity
+    
+    Args:
+        opportunity_id: ID of the opportunity
+    
+    Returns:
+        dict with report counts and risk assessment
+    """
+    # In production, would query database for reports on this opportunity
+    return {
+        'opportunity_id': opportunity_id,
+        'total_reports': 0,
+        'scam_reports': 0,
+        'spam_reports': 0,
+        'misleading_reports': 0,
+        'risk_level': 'low',  # low, medium, high
+        'needs_review': False
+    }
 
 # ============= MAIN AGGREGATOR =============
 

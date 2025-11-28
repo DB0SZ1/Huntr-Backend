@@ -25,9 +25,15 @@ async def get_user_opportunities(
     platform: str = Query(None),
     saved_only: bool = Query(False)
 ):
-    """Get opportunities for current user ONLY"""
+    """Get opportunities for current user ONLY - from recent scans only"""
     try:
-        query = {"user_id": user_id}
+        # ONLY fetch opportunities that have platform, title, and url (actual scan results, not tracking records)
+        query = {
+            "user_id": user_id,
+            "platform": {"$exists": True, "$ne": "Unknown"},
+            "title": {"$exists": True, "$ne": ""},
+            "url": {"$exists": True, "$ne": ""}
+        }
         
         if platform:
             query["platform"] = platform
@@ -43,15 +49,50 @@ async def get_user_opportunities(
             .limit(limit)\
             .to_list(length=limit)
         
+        # Parse and clean up opportunities for display
+        parsed_opps = []
         for opp in opportunities:
             opp["_id"] = str(opp["_id"])
+            
+            # Clean title - remove newlines, truncate
+            title = opp.get("title", "No title")
+            if isinstance(title, str):
+                title = title.replace('\n', ' ').replace('\r', '').strip()[:100]
+            opp["title"] = title
+            
+            # Ensure platform is set
+            if not opp.get("platform") or opp["platform"] == "Unknown":
+                opp["platform"] = "Opportunity"
+            
+            # Format for display card
+            time_ago = ""
+            if opp.get("found_at"):
+                from datetime import datetime, timedelta
+                found = opp["found_at"]
+                now = datetime.utcnow()
+                diff = now - found
+                
+                if diff.total_seconds() < 60:
+                    time_ago = "just now"
+                elif diff.total_seconds() < 3600:
+                    mins = int(diff.total_seconds() / 60)
+                    time_ago = f"{mins}m ago"
+                elif diff.total_seconds() < 86400:
+                    hours = int(diff.total_seconds() / 3600)
+                    time_ago = f"{hours}h ago"
+                else:
+                    days = int(diff.days)
+                    time_ago = f"{days}d ago"
+            
+            opp["time_ago"] = time_ago
+            parsed_opps.append(opp)
         
         return {
             "total": total,
             "skip": skip,
             "limit": limit,
             "pagination": {"total": total, "skip": skip, "limit": limit},
-            "opportunities": opportunities
+            "opportunities": parsed_opps
         }
     except Exception as e:
         logger.error(f"Error fetching opportunities for user {user_id}: {str(e)}")

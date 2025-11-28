@@ -158,10 +158,14 @@ async def cleanup_caches():
 
 
 async def cleanup_expired_opportunities_task():
-    """Wrapper for cleanup task"""
+    """Clean up unsaved opportunities based on tier retention policy"""
     try:
+        from app.scan.cache_service import cleanup_expired_opportunities
+        
         db = await get_database()
-        logger.info("Cleanup task completed")
+        deleted = await cleanup_expired_opportunities(db)
+        
+        logger.info(f"[CLEANUP] Completed: Deleted {deleted} expired opportunities")
     except Exception as e:
         logger.error(f"Cleanup task error: {str(e)}")
 

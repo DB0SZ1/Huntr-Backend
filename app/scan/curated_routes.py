@@ -23,6 +23,11 @@ from app.credits.manager import CreditManager
 from config import TIER_LIMITS, CREDIT_COSTS
 from modules.analyzer import curate_gigs, detect_scam_indicators, detect_salary
 from app.jobs.scraper import scrape_platforms_for_user
+from app.scan.cache_service import (
+    cache_opportunities_by_niche,
+    get_cached_opportunities,
+    get_niche_for_user
+)
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/curated", tags=["Curated Gigs"])
@@ -37,6 +42,7 @@ async def get_weekly_top_20(
 ):
     """
     Get top 20 curated gigs for the week
+    - Uses cache for niche-specific opportunities to avoid repeated API calls
     - Automatically performs scans based on tier
     - Filters scams using AI detection
     - Scores opportunities by niche match
@@ -70,27 +76,44 @@ async def get_weekly_top_20(
                 "total": 0
             }
         
-        # Perform automatic scans based on tier
+        # Collect opportunities - use cache first, then scrape if needed
         all_opportunities = []
         scans_to_perform = tier_config.get("scans_per_day", 1)
         platforms = tier_config.get("platforms", [])
         
-        logger.info(f"Performing {scans_to_perform} scans for {tier} user {user_id}")
+        logger.info(f"Performing curated scan for {tier} user {user_id} with {len(niches)} niches")
         
-        for scan_num in range(min(scans_to_perform, 3)):  # Max 3 scans to avoid API limits
+        # Try to get cached opportunities for each niche first
+        for niche in niches:
             try:
-                # Scrape platforms
-                result = await asyncio.to_thread(
-                    lambda: scrape_platforms_for_user(platforms, max_concurrent=2)
-                )
+                # Check cache first (24h TTL)
+                cached_opps = await get_cached_opportunities(db, niche['_id'])
                 
-                opportunities = result.get('opportunities', [])
-                all_opportunities.extend(opportunities)
-                
-                logger.info(f"Scan {scan_num+1}: Found {len(opportunities)} opportunities")
+                if cached_opps:
+                    logger.info(f"Cache hit for niche {niche['name']}: {len(cached_opps)} opportunities")
+                    all_opportunities.extend(cached_opps)
+                else:
+                    # Cache miss - perform scan for this niche
+                    logger.info(f"Cache miss for niche {niche['name']} - scraping...")
+                    
+                    try:
+                        result = await asyncio.to_thread(
+                            lambda: scrape_platforms_for_user(platforms, max_concurrent=2)
+                        )
+                        
+                        opportunities = result.get('opportunities', [])
+                        all_opportunities.extend(opportunities)
+                        
+                        # Cache the results for this niche
+                        if opportunities:
+                            await cache_opportunities_by_niche(db, niche['_id'], opportunities, ttl_hours=24)
+                            logger.info(f"Cached {len(opportunities)} opportunities for niche {niche['name']}")
+                    
+                    except Exception as e:
+                        logger.error(f"Error scraping for niche {niche['name']}: {str(e)}")
             
             except Exception as e:
-                logger.error(f"Error in scan {scan_num+1}: {str(e)}")
+                logger.error(f"Error processing niche {niche.get('name')}: {str(e)}")
         
         # Curate gigs for each niche
         curated_by_niche = {}
@@ -144,6 +167,7 @@ async def get_weekly_top_20(
             "tier": tier,
             "gigs": top_20,
             "total_scanned": len(all_opportunities),
+            "cache_used": True,
             "created_at": datetime.utcnow(),
             "week_of": datetime.utcnow().replace(day=1)
         })

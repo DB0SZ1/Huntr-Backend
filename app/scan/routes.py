@@ -63,11 +63,23 @@ async def perform_scan_background(
         )
         
         # Extract opportunities from results
-        opportunities = results.get("opportunities", [])
+        all_opportunities = results.get("opportunities", [])
         stats = results.get("stats", {})
         
-        # Store opportunities to user_opportunities collection for retrieval
+        # APPLY TIER-BASED LIMITS: Free=4, Pro=3, Premium=3
+        tier_limits = {
+            "free": 4,
+            "pro": 3,
+            "premium": 3
+        }
+        max_opps = tier_limits.get(user_tier, 4)
+        opportunities = all_opportunities[:max_opps]
+        
+        logger.info(f"[SCAN] Tier {user_tier}: Limiting {len(all_opportunities)} to {len(opportunities)} opportunities")
+        
+        # Store opportunities to user_opportunities collection ONLY (single source of truth)
         now = datetime.utcnow()
+        stored_count = 0
         for opp in opportunities:
             try:
                 # Check if this opportunity already exists for this user
@@ -77,13 +89,18 @@ async def perform_scan_background(
                 })
                 
                 if not existing:
-                    # Store as user opportunity
+                    # Store as user opportunity with proper parsing
+                    title = opp.get("title", "No title")
+                    if isinstance(title, str):
+                        # Clean up title - remove newlines and truncate
+                        title = title.replace('\n', ' ')[:100]
+                    
                     user_opp = {
                         "user_id": user_id,
                         "scan_id": scan_id,
                         "external_id": opp.get("id"),
-                        "title": opp.get("title", "No title"),
-                        "description": opp.get("description", ""),
+                        "title": title,
+                        "description": opp.get("description", "")[:500],
                         "platform": opp.get("platform", "Unknown"),
                         "url": opp.get("url", ""),
                         "contact": opp.get("contact"),
@@ -96,13 +113,15 @@ async def perform_scan_background(
                         "found_at": now,
                         "is_saved": False,
                         "is_applied": False,
-                        "notes": ""
+                        "notes": "",
+                        "match_score": 0
                     }
                     await db.user_opportunities.insert_one(user_opp)
+                    stored_count += 1
             except Exception as e:
                 logger.warning(f"[SCAN] Failed to store opportunity: {str(e)}")
         
-        logger.info(f"[SCAN] Stored {len(opportunities)} opportunities to user_opportunities for user {user_id}")
+        logger.info(f"[SCAN] Stored {stored_count} opportunities to user_opportunities for user {user_id}")
         
         # Update scan_history record with results
         await db.scan_history.update_one(
