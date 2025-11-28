@@ -27,12 +27,12 @@ async def get_user_opportunities(
 ):
     """Get opportunities for current user ONLY - from recent scans only"""
     try:
-        # ONLY fetch opportunities that have platform, title, and url (actual scan results, not tracking records)
+        # ONLY fetch opportunities that have platform and title (actual scan results)
+        # NOTE: Removed strict URL requirement to avoid filtering valid opportunities
         query = {
             "user_id": user_id,
             "platform": {"$exists": True, "$ne": "Unknown"},
-            "title": {"$exists": True, "$ne": ""},
-            "url": {"$exists": True, "$ne": ""}
+            "title": {"$exists": True, "$ne": ""}
         }
         
         if platform:

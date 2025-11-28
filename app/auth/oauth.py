@@ -97,26 +97,36 @@ async def google_callback(request: Request):
             user_id = str(result.inserted_id)
             
             # Create default free subscription
-            await db.subscriptions.insert_one({
+            # NOTE: Don't include paystack_subscription_id if null - the index is sparse
+            subscription_doc = {
                 "user_id": user_id,
                 "tier": "free",
                 "status": "active",
                 "payment_method": None,
-                "paystack_subscription_id": None,
                 "current_period_start": datetime.utcnow(),
                 "current_period_end": datetime.utcnow() + timedelta(days=365),
                 "created_at": datetime.utcnow()
-            })
+            }
+            
+            # Check if subscription already exists (prevent duplicates)
+            existing_sub = await db.subscriptions.find_one({"user_id": user_id})
+            if not existing_sub:
+                await db.subscriptions.insert_one(subscription_doc)
             
             # Initialize usage tracking for current month
-            await db.usage_tracking.insert_one({
+            usage_doc = {
                 "user_id": user_id,
                 "month": datetime.utcnow().strftime("%Y-%m"),
                 "opportunities_sent": 0,
                 "scans_completed": 0,
                 "ai_analyses_used": 0,
                 "notifications_sent": 0
-            })
+            }
+            
+            # Check if usage tracking already exists
+            existing_usage = await db.usage_tracking.find_one({"user_id": user_id})
+            if not existing_usage:
+                await db.usage_tracking.insert_one(usage_doc)
             
             logger.info(f"New user created: {user_info['email']} (ID: {user_id})")
         

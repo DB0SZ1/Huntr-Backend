@@ -67,13 +67,13 @@ async def perform_scan_background(
         all_opportunities = results.get("opportunities", [])
         stats = results.get("stats", {})
         
-        # APPLY TIER-BASED LIMITS: Free=4, Pro=3, Premium=3
+        # APPLY TIER-BASED LIMITS: Free=3, Pro=2, Premium=4
         tier_limits = {
-            "free": 4,
-            "pro": 3,
-            "premium": 3
+            "free": 3,
+            "pro": 2,
+            "premium": 4
         }
-        max_opps = tier_limits.get(user_tier, 4)
+        max_opps = tier_limits.get(user_tier, 3)
         opportunities = all_opportunities[:max_opps]
         
         logger.info(f"[SCAN] Tier {user_tier}: Limiting {len(all_opportunities)} to {len(opportunities)} opportunities")
@@ -83,10 +83,13 @@ async def perform_scan_background(
         stored_count = 0
         for opp in opportunities:
             try:
+                # Generate opportunity_id from scraped ID or create fallback
+                opportunity_id = opp.get("id", f"opp_{int(time.time())}_{stored_count}")
+                
                 # Check if this opportunity already exists for this user
                 existing = await db.user_opportunities.find_one({
                     "user_id": user_id,
-                    "external_id": opp.get("id")
+                    "opportunity_id": opportunity_id
                 })
                 
                 if not existing:
@@ -99,7 +102,7 @@ async def perform_scan_background(
                     user_opp = {
                         "user_id": user_id,
                         "scan_id": scan_id,
-                        "external_id": opp.get("id", f"opp_{int(time.time())}_{stored_count}"),
+                        "opportunity_id": opportunity_id,
                         "title": title,
                         "description": opp.get("description", "")[:500],
                         "platform": opp.get("platform", "Unknown"),
@@ -115,20 +118,14 @@ async def perform_scan_background(
                         "is_saved": False,
                         "is_applied": False,
                         "notes": "",
-                        "match_score": 0
+                        "match_score": 0,
+                        "sent_at": now
                     }
                     
-                    # Check for duplicate before inserting
-                    existing = await db.user_opportunities.find_one({
-                        "user_id": user_id,
-                        "external_id": user_opp.get("external_id")
-                    })
-                    
-                    if not existing:
-                        await db.user_opportunities.insert_one(user_opp)
-                        stored_count += 1
-                    else:
-                        logger.debug(f"[SCAN] Skipping duplicate opportunity: {user_opp.get('external_id')}")
+                    await db.user_opportunities.insert_one(user_opp)
+                    stored_count += 1
+                else:
+                    logger.debug(f"[SCAN] Skipping duplicate opportunity: {opportunity_id}")
             except Exception as e:
                 logger.warning(f"[SCAN] Failed to store opportunity: {str(e)}")
         
@@ -209,6 +206,25 @@ async def start_scan(
         user_id = current_user.get("id")
         if not user_id:
             raise HTTPException(status_code=400, detail="User ID not found in session")
+        
+        # ✅ CHECK 1: User must have at least one active niche with keywords
+        niche = await db.niche_configs.find_one({
+            "user_id": user_id,
+            "is_active": True
+        })
+        
+        if not niche:
+            raise HTTPException(
+                status_code=400,
+                detail="No active niche configured. Please create a niche with keywords first."
+            )
+        
+        niche_keywords = niche.get("keywords", [])
+        if not niche_keywords:
+            raise HTTPException(
+                status_code=400,
+                detail="Your niche has no keywords. Please add keywords to your niche."
+            )
         
         CREDITS_REQUIRED = 5
         
