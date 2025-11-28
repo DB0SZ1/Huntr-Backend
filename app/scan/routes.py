@@ -66,6 +66,44 @@ async def perform_scan_background(
         opportunities = results.get("opportunities", [])
         stats = results.get("stats", {})
         
+        # Store opportunities to user_opportunities collection for retrieval
+        now = datetime.utcnow()
+        for opp in opportunities:
+            try:
+                # Check if this opportunity already exists for this user
+                existing = await db.user_opportunities.find_one({
+                    "user_id": user_id,
+                    "external_id": opp.get("id")
+                })
+                
+                if not existing:
+                    # Store as user opportunity
+                    user_opp = {
+                        "user_id": user_id,
+                        "scan_id": scan_id,
+                        "external_id": opp.get("id"),
+                        "title": opp.get("title", "No title"),
+                        "description": opp.get("description", ""),
+                        "platform": opp.get("platform", "Unknown"),
+                        "url": opp.get("url", ""),
+                        "contact": opp.get("contact"),
+                        "telegram": opp.get("telegram"),
+                        "twitter": opp.get("twitter"),
+                        "website": opp.get("website"),
+                        "email": opp.get("email"),
+                        "timestamp": opp.get("timestamp"),
+                        "metadata": opp.get("metadata", {}),
+                        "found_at": now,
+                        "is_saved": False,
+                        "is_applied": False,
+                        "notes": ""
+                    }
+                    await db.user_opportunities.insert_one(user_opp)
+            except Exception as e:
+                logger.warning(f"[SCAN] Failed to store opportunity: {str(e)}")
+        
+        logger.info(f"[SCAN] Stored {len(opportunities)} opportunities to user_opportunities for user {user_id}")
+        
         # Update scan_history record with results
         await db.scan_history.update_one(
             {"scan_id": scan_id},

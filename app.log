@@ -32288,3 +32288,192 @@ AttributeError: 'Settings' object has no attribute 'MONGODB_URL'
 2025-11-28 10:27:55,848 - apscheduler.executors.default - INFO - Running job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-28 10:41:55 WAT)" (scheduled at 2025-11-28 10:27:55.830488+01:00)
 2025-11-28 10:28:01,860 - app.monitoring.keep_alive - ERROR - [PING] Failed: 
 2025-11-28 10:28:01,866 - apscheduler.executors.default - INFO - Job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-28 10:41:55 WAT)" executed successfully
+2025-11-28 10:41:55,841 - apscheduler.executors.default - INFO - Running job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-28 10:55:55 WAT)" (scheduled at 2025-11-28 10:41:55.830488+01:00)
+2025-11-28 10:42:01,894 - app.monitoring.keep_alive - ERROR - [PING] Failed: 
+2025-11-28 10:42:01,902 - apscheduler.executors.default - INFO - Job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-28 10:55:55 WAT)" executed successfully
+2025-11-28 10:56:15,549 - apscheduler.executors.default - WARNING - Run time of job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-28 11:09:55 WAT)" was missed by 0:00:19.717777
+2025-11-28 11:01:59,843 - app.database.connection - WARNING - [WARN] Database not connected, attempting connection...
+2025-11-28 11:01:59,845 - app.database.connection - INFO - [ATTEMPT 1/3] MongoDB connection...
+2025-11-28 11:01:59,917 - app.database.connection - INFO - [CHECK] Testing connection with ping...
+2025-11-28 11:02:09,934 - app.database.connection - ERROR - [TIMEOUT] Connection timeout on attempt 1
+2025-11-28 11:02:11,940 - app.database.connection - INFO - [ATTEMPT 2/3] MongoDB connection...
+2025-11-28 11:02:11,948 - app.database.connection - INFO - [CHECK] Testing connection with ping...
+2025-11-28 11:02:21,965 - app.database.connection - ERROR - [TIMEOUT] Connection timeout on attempt 2
+2025-11-28 11:02:25,984 - app.database.connection - INFO - [ATTEMPT 3/3] MongoDB connection...
+2025-11-28 11:02:25,991 - app.database.connection - INFO - [CHECK] Testing connection with ping...
+2025-11-28 11:02:35,999 - app.database.connection - ERROR - [TIMEOUT] Connection timeout on attempt 3
+2025-11-28 11:02:36,001 - app.database.connection - CRITICAL - Failed to connect to MongoDB after 3 attempts
+2025-11-28 11:02:36,002 - app.database.connection - ERROR - [FAIL] Failed to establish database connection: Failed to connect to MongoDB after 3 attempts: 
+2025-11-28 11:02:36,008 - main - ERROR - Unhandled exception: Database connection failed
+Traceback (most recent call last):
+  File "c:\Users\IDRIS\Desktop\job-hunter-backend\app\database\connection.py", line 393, in get_database
+    await _manager.connect(retries=3)
+  File "c:\Users\IDRIS\Desktop\job-hunter-backend\app\database\connection.py", line 158, in connect
+    raise ConnectionFailure(f"{error_msg}: {last_error}")
+pymongo.errors.ConnectionFailure: Failed to connect to MongoDB after 3 attempts: 
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\middleware\cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\middleware\sessions.py", line 85, in __call__
+    await self.app(scope, receive, send_wrapper)
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\_utils.py", line 85, in collapse_excgroups
+    raise exc
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\IDRIS\Desktop\job-hunter-backend\app\monitoring\metrics.py", line 26, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\fastapi\middleware\asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\fastapi\routing.py", line 123, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\fastapi\routing.py", line 109, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\fastapi\routing.py", line 379, in app
+    solved_result = await solve_dependencies(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\fastapi\dependencies\utils.py", line 673, in solve_dependencies
+    solved = await call(**solved_result.values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\IDRIS\Desktop\job-hunter-backend\app\database\connection.py", line 396, in get_database
+    raise RuntimeError("Database connection failed") from e
+RuntimeError: Database connection failed
+2025-11-28 11:02:36,068 - app.database.connection - WARNING - [WARN] Database not connected, attempting connection...
+2025-11-28 11:02:36,069 - app.database.connection - INFO - [ATTEMPT 1/3] MongoDB connection...
+2025-11-28 11:02:36,097 - app.database.connection - INFO - [CHECK] Testing connection with ping...
+2025-11-28 11:02:46,118 - app.database.connection - ERROR - [TIMEOUT] Connection timeout on attempt 1
+2025-11-28 11:02:48,132 - app.database.connection - INFO - [ATTEMPT 2/3] MongoDB connection...
+2025-11-28 11:02:48,142 - app.database.connection - INFO - [CHECK] Testing connection with ping...
+2025-11-28 11:02:58,140 - app.database.connection - ERROR - [TIMEOUT] Connection timeout on attempt 2
+2025-11-28 11:03:02,158 - app.database.connection - INFO - [ATTEMPT 3/3] MongoDB connection...
+2025-11-28 11:03:02,160 - app.database.connection - INFO - [CHECK] Testing connection with ping...
+2025-11-28 11:03:12,179 - app.database.connection - ERROR - [TIMEOUT] Connection timeout on attempt 3
+2025-11-28 11:03:12,180 - app.database.connection - CRITICAL - Failed to connect to MongoDB after 3 attempts
+2025-11-28 11:03:12,181 - app.database.connection - ERROR - [FAIL] Failed to establish database connection: Failed to connect to MongoDB after 3 attempts: 
+2025-11-28 11:04:20,456 - app.database.connection - WARNING - [WARN] Database not connected, attempting connection...
+2025-11-28 11:04:20,457 - app.database.connection - INFO - [ATTEMPT 1/3] MongoDB connection...
+2025-11-28 11:04:20,465 - app.database.connection - INFO - [CHECK] Testing connection with ping...
+2025-11-28 11:04:30,484 - app.database.connection - ERROR - [TIMEOUT] Connection timeout on attempt 1
+2025-11-28 11:04:32,498 - app.database.connection - INFO - [ATTEMPT 2/3] MongoDB connection...
+2025-11-28 11:04:32,506 - app.database.connection - INFO - [CHECK] Testing connection with ping...
+2025-11-28 11:04:42,526 - app.database.connection - ERROR - [TIMEOUT] Connection timeout on attempt 2
+2025-11-28 11:04:46,526 - app.database.connection - INFO - [ATTEMPT 3/3] MongoDB connection...
+2025-11-28 11:04:46,533 - app.database.connection - INFO - [CHECK] Testing connection with ping...
+2025-11-28 11:04:56,541 - app.database.connection - ERROR - [TIMEOUT] Connection timeout on attempt 3
+2025-11-28 11:04:56,543 - app.database.connection - CRITICAL - Failed to connect to MongoDB after 3 attempts
+2025-11-28 11:04:56,543 - app.database.connection - ERROR - [FAIL] Failed to establish database connection: Failed to connect to MongoDB after 3 attempts: 
+2025-11-28 11:04:56,545 - app.monitoring.metrics - ERROR - Failed to store API metrics: Database connection failed
+2025-11-28 11:04:57,308 - app.database.connection - WARNING - [WARN] Database not connected, attempting connection...
+2025-11-28 11:04:57,309 - app.database.connection - INFO - [ATTEMPT 1/3] MongoDB connection...
+2025-11-28 11:04:57,317 - app.database.connection - INFO - [CHECK] Testing connection with ping...
+2025-11-28 11:05:07,333 - app.database.connection - ERROR - [TIMEOUT] Connection timeout on attempt 1
+2025-11-28 11:05:09,350 - app.database.connection - INFO - [ATTEMPT 2/3] MongoDB connection...
+2025-11-28 11:05:09,357 - app.database.connection - INFO - [CHECK] Testing connection with ping...
+2025-11-28 11:05:19,375 - app.database.connection - ERROR - [TIMEOUT] Connection timeout on attempt 2
+2025-11-28 11:05:23,389 - app.database.connection - INFO - [ATTEMPT 3/3] MongoDB connection...
+2025-11-28 11:05:23,391 - app.database.connection - INFO - [CHECK] Testing connection with ping...
+2025-11-28 11:05:33,389 - app.database.connection - ERROR - [TIMEOUT] Connection timeout on attempt 3
+2025-11-28 11:05:33,391 - app.database.connection - CRITICAL - Failed to connect to MongoDB after 3 attempts
+2025-11-28 11:05:33,392 - app.database.connection - ERROR - [FAIL] Failed to establish database connection: Failed to connect to MongoDB after 3 attempts: 
+2025-11-28 11:05:33,394 - main - ERROR - Unhandled exception: Database connection failed
+Traceback (most recent call last):
+  File "c:\Users\IDRIS\Desktop\job-hunter-backend\app\database\connection.py", line 393, in get_database
+    await _manager.connect(retries=3)
+  File "c:\Users\IDRIS\Desktop\job-hunter-backend\app\database\connection.py", line 158, in connect
+    raise ConnectionFailure(f"{error_msg}: {last_error}")
+pymongo.errors.ConnectionFailure: Failed to connect to MongoDB after 3 attempts: 
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\middleware\errors.py", line 164, in __call__
+    await self.app(scope, receive, _send)
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\middleware\cors.py", line 85, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\middleware\sessions.py", line 85, in __call__
+    await self.app(scope, receive, send_wrapper)
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\middleware\base.py", line 182, in __call__
+    with recv_stream, send_stream, collapse_excgroups():
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\_utils.py", line 85, in collapse_excgroups
+    raise exc
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\middleware\base.py", line 184, in __call__
+    response = await self.dispatch_func(request, call_next)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\IDRIS\Desktop\job-hunter-backend\app\monitoring\metrics.py", line 26, in dispatch
+    response = await call_next(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\middleware\base.py", line 159, in call_next
+    raise app_exc
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\middleware\base.py", line 144, in coro
+    await self.app(scope, receive_or_disconnect, send_no_error)
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\middleware\exceptions.py", line 63, in __call__
+    await wrap_app_handling_exceptions(self.app, conn)(scope, receive, send)
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\fastapi\middleware\asyncexitstack.py", line 18, in __call__
+    await self.app(scope, receive, send)
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\routing.py", line 716, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\routing.py", line 736, in app
+    await route.handle(scope, receive, send)
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\routing.py", line 290, in handle
+    await self.app(scope, receive, send)
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\fastapi\routing.py", line 123, in app
+    await wrap_app_handling_exceptions(app, request)(scope, receive, send)
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\_exception_handler.py", line 53, in wrapped_app
+    raise exc
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\starlette\_exception_handler.py", line 42, in wrapped_app
+    await app(scope, receive, sender)
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\fastapi\routing.py", line 109, in app
+    response = await f(request)
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\fastapi\routing.py", line 379, in app
+    solved_result = await solve_dependencies(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\IDRIS\AppData\Local\Programs\Python\Python311\Lib\site-packages\fastapi\dependencies\utils.py", line 673, in solve_dependencies
+    solved = await call(**solved_result.values)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\IDRIS\Desktop\job-hunter-backend\app\database\connection.py", line 396, in get_database
+    raise RuntimeError("Database connection failed") from e
+RuntimeError: Database connection failed
+2025-11-28 11:05:33,435 - app.database.connection - WARNING - [WARN] Database not connected, attempting connection...
+2025-11-28 11:05:33,436 - app.database.connection - INFO - [ATTEMPT 1/3] MongoDB connection...
+2025-11-28 11:05:33,441 - app.database.connection - INFO - [CHECK] Testing connection with ping...
+2025-11-28 11:05:43,458 - app.database.connection - ERROR - [TIMEOUT] Connection timeout on attempt 1
+2025-11-28 11:05:45,465 - app.database.connection - INFO - [ATTEMPT 2/3] MongoDB connection...
+2025-11-28 11:05:45,476 - app.database.connection - INFO - [CHECK] Testing connection with ping...
