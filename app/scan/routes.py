@@ -26,11 +26,16 @@ async def start_scan(
 ):
     """Start a scan with proper credit deduction based on user tier"""
     try:
-        user_id = str(current_user.get("_id"))
+        # Get user_id from current_user (key is "id", not "_id")
+        user_id = current_user.get("id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found in session")
+        
         CREDITS_REQUIRED = 5
         
         # ✅ STEP 1: Initialize credits if not exists (using tier-based values from config)
         await initialize_user_credits(db, user_id)
+        
         
         # ✅ STEP 2: Get user and determine tier
         user = await db.users.find_one({"_id": ObjectId(user_id)})

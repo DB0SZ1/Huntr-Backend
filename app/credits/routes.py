@@ -312,7 +312,9 @@ async def get_credits_summary(
 ):
     """Get comprehensive credit summary with proper calculation"""
     try:
-        user_id = current_user.get("_id")
+        user_id = current_user.get("id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found in session")
         
         # Fetch user credit record
         credit_record = await db.user_credits.find_one({"user_id": user_id})
@@ -386,7 +388,9 @@ async def deduct_credits(
     Used internally by scan, search, etc.
     """
     try:
-        user_id = current_user.get("_id")
+        user_id = current_user.get("id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found in session")
         
         # Get current credits
         credit_record = await db.user_credits.find_one({"user_id": user_id})
@@ -445,7 +449,9 @@ async def get_credit_transactions(
 ):
     """Get credit transaction history"""
     try:
-        user_id = current_user.get("_id")
+        user_id = current_user.get("id")
+        if not user_id:
+            raise HTTPException(status_code=400, detail="User ID not found in session")
         
         transactions = await db.credit_transactions.find(
             {"user_id": user_id}

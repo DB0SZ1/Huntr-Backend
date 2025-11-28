@@ -32232,3 +32232,41 @@ AttributeError: 'Settings' object has no attribute 'MONGODB_URL'
 2025-11-27 18:34:34,871 - apscheduler.executors.default - INFO - Running job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-27 18:48:34 WAT)" (scheduled at 2025-11-27 18:34:34.855950+01:00)
 2025-11-27 18:34:35,637 - app.monitoring.keep_alive - ERROR - [PING] Failed: [Errno 11001] getaddrinfo failed
 2025-11-27 18:34:35,639 - apscheduler.executors.default - INFO - Job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-27 18:48:34 WAT)" executed successfully
+2025-11-28 08:49:19,190 - __main__ - INFO - ============================================================
+2025-11-28 08:49:19,190 - __main__ - INFO - Starting Uvicorn Server...
+2025-11-28 08:49:19,191 - __main__ - INFO - Debug Mode: False
+2025-11-28 08:49:19,191 - __main__ - INFO - API URL: https://job-hunter-api.onrender.com
+2025-11-28 08:49:19,191 - __main__ - INFO - ============================================================
+2025-11-28 08:49:19,480 - main - INFO - ============================================================
+2025-11-28 08:49:19,481 - main - INFO - Starting Multi-Tenant Job Hunter Backend (v2.1 - Render Optimized)...
+2025-11-28 08:49:19,481 - main - INFO - ============================================================
+2025-11-28 08:49:19,481 - main - INFO - [INFO] Connecting to MongoDB...
+2025-11-28 08:49:19,482 - app.database.connection - INFO - [ATTEMPT 1/3] MongoDB connection...
+2025-11-28 08:49:19,727 - app.database.connection - INFO - [CHECK] Testing connection with ping...
+2025-11-28 08:49:29,729 - app.database.connection - ERROR - [TIMEOUT] Connection timeout on attempt 1
+2025-11-28 08:49:31,719 - app.database.connection - INFO - [ATTEMPT 2/3] MongoDB connection...
+2025-11-28 08:49:31,729 - app.database.connection - INFO - [CHECK] Testing connection with ping...
+2025-11-28 08:49:41,743 - app.database.connection - ERROR - [TIMEOUT] Connection timeout on attempt 2
+2025-11-28 08:49:45,760 - app.database.connection - INFO - [ATTEMPT 3/3] MongoDB connection...
+2025-11-28 08:49:45,770 - app.database.connection - INFO - [CHECK] Testing connection with ping...
+2025-11-28 08:49:55,783 - app.database.connection - ERROR - [TIMEOUT] Connection timeout on attempt 3
+2025-11-28 08:49:55,784 - app.database.connection - CRITICAL - Failed to connect to MongoDB after 3 attempts
+2025-11-28 08:49:55,786 - main - CRITICAL - [FAIL] MongoDB connection failed: Failed to connect to MongoDB after 3 attempts: 
+2025-11-28 08:49:55,787 - main - CRITICAL - [CRITICAL] Application cannot start without database connection
+2025-11-28 08:49:55,788 - main - WARNING - [WARNING] App starting in degraded mode - database unavailable
+2025-11-28 08:49:55,789 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-11-28 08:49:55,819 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-11-28 08:49:55,821 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-11-28 08:49:55,825 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-11-28 08:49:55,829 - main - ERROR - [WARN] Scheduler start failed: Invalid weekday name "sunday"
+2025-11-28 08:49:55,830 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-11-28 08:49:55,833 - apscheduler.scheduler - INFO - Added job "KeepAliveService._ping" to job store "default"
+2025-11-28 08:49:55,834 - apscheduler.scheduler - INFO - Scheduler started
+2025-11-28 08:49:55,834 - app.monitoring.keep_alive - INFO - ✓ Keep-alive service started (pings every 14 min)
+2025-11-28 08:49:55,835 - main - INFO - [OK] Keep-alive service started (Render optimization)
+2025-11-28 08:49:55,835 - main - INFO - ============================================================
+2025-11-28 08:49:55,836 - main - INFO - Application startup complete!
+2025-11-28 08:49:55,836 - main - INFO - ============================================================
+2025-11-28 09:03:55,841 - apscheduler.executors.default - INFO - Running job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-28 09:17:55 WAT)" (scheduled at 2025-11-28 09:03:55.830488+01:00)
+2025-11-28 09:04:02,158 - app.monitoring.keep_alive - ERROR - [PING] Failed: 
+2025-11-28 09:04:02,165 - apscheduler.executors.default - INFO - Job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-28 09:17:55 WAT)" executed successfully
