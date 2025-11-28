@@ -12,7 +12,7 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('bot.log'),
+        logging.FileHandler('bot.log', encoding='utf-8'),
         logging.StreamHandler()
     ]
 )
@@ -765,7 +765,7 @@ async def scrape_telegram_channels_async():
                 logger.warning("Telegram client not authorized")
                 return []
             
-            logger.info("✅ Authenticated with Telegram")
+            logger.info("[OK] Authenticated with Telegram")
             
             # Scan each channel
             for channel in TELEGRAM_CHANNELS:
@@ -812,6 +812,7 @@ async def scrape_telegram_channels_async():
                             "description": text[:500],  # First 500 chars
                             "platform": "Telegram",
                             "url": f"https://t.me/{channel.lstrip('@')}",
+                            "telegram": channel,
                             "telegram_channel": channel,
                             "contact": contact or email or "Contact via channel",
                             "salary": salary,
@@ -827,7 +828,7 @@ async def scrape_telegram_channels_async():
                         # Avoid duplicates
                         if not any(o.get('metadata', {}).get('message_id') == msg.id for o in opportunities):
                             opportunities.append(opportunity)
-                            logger.info(f"✅ Found opportunity: {title[:50]}...")
+                            logger.info(f"[+] Found opportunity: {title[:50]}...")
                 
                 except Exception as e:
                     logger.warning(f"Error scanning {channel}: {str(e)}")
@@ -910,7 +911,7 @@ def scrape_telegram_channels():
                 logger.warning("Telegram client not authorized")
                 return []
             
-            logger.info("✅ Authenticated with Telegram")
+            logger.info("[OK] Authenticated with Telegram")
             
             for channel in TELEGRAM_CHANNELS:
                 try:
@@ -940,6 +941,7 @@ def scrape_telegram_channels():
                             "description": text[:500],
                             "platform": "Telegram",
                             "url": f"https://t.me/{channel.lstrip('@')}",
+                            "telegram": channel,
                             "telegram_channel": channel,
                             "contact": handle_match.group(0) if handle_match else (email_match.group(0) if email_match else "Contact via channel"),
                             "salary": salary_match.group(0) if salary_match else None,
@@ -954,7 +956,7 @@ def scrape_telegram_channels():
                         
                         if not any(o.get('metadata', {}).get('message_id') == msg.id for o in opportunities):
                             opportunities.append(opportunity)
-                            logger.info(f"✅ Found opportunity: {title[:50]}...")
+                            logger.info(f"[+] Found opportunity: {title[:50]}...")
                 
                 except Exception as e:
                     logger.warning(f"Error scanning {channel}: {str(e)}")
