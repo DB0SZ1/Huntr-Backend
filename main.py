@@ -347,7 +347,7 @@ async def initialize_admin_user():
 
 async def initialize_database_fields():
     """
-    Add new fields to existing collections
+    Add new fields to existing collections and set up daily credit allocation
     """
     try:
         from app.database.connection import get_database
@@ -371,7 +371,15 @@ async def initialize_database_fields():
             {"$set": {"total_api_calls": 0}}
         )
         
-        logger.info("Database fields initialized")
+        # Ensure all users have credit records based on their tier (using config values)
+        from app.credits.routes import initialize_user_credits
+        users = await db.users.find({}).to_list(None)
+        for user in users:
+            user_id = str(user["_id"])
+            # initialize_user_credits will use TIER_LIMITS from config.py
+            await initialize_user_credits(db, user_id)
+        
+        logger.info("Database fields initialized with tier-based daily credit limits")
     
     except Exception as e:
         logger.error(f"Error initializing database fields: {str(e)}")

@@ -3,7 +3,7 @@ Credits Management
 Daily credit allocation and tracking for users
 """
 import logging
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query, status
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from bson.objectid import ObjectId
 from datetime import datetime, timedelta
@@ -18,6 +18,50 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/credits", tags=["Credits"])
 
 
+async def initialize_user_credits(db, user_id: str):
+    """
+    Initialize credits for a new user based on their tier from TIER_LIMITS config
+    Creates user_credits record with tier-based daily allocation
+    """
+    try:
+        # Check if user_credits already exists
+        existing = await db.user_credits.find_one({"user_id": user_id})
+        if existing:
+            return  # Already initialized
+        
+        # Get user's tier from database
+        try:
+            user = await db.users.find_one({"_id": ObjectId(user_id)})
+            user_tier = user.get("tier", "free") if user else "free"
+        except:
+            user_tier = "free"
+        
+        # Get daily credits from TIER_LIMITS config
+        daily_credits = TIER_LIMITS.get(user_tier, {}).get("daily_credits", 10)
+        
+        # Initialize user_credits with tier-based daily limit
+        now = datetime.utcnow()
+        await db.user_credits.insert_one({
+            "user_id": user_id,
+            "current_credits": daily_credits,
+            "daily_credits": daily_credits,
+            "daily_credits_used": 0,
+            "last_refill": now,
+            "next_refill": now + timedelta(days=1),
+            "total_credits_used": 0,
+            "total_credits_purchased": 0,
+            "tier": user_tier,
+            "created_at": now,
+            "updated_at": now,
+            "transactions": []
+        })
+        logger.info(f"Initialized credits for user {user_id} (tier: {user_tier}, daily: {daily_credits})")
+    
+    except Exception as e:
+        logger.error(f"Failed to initialize credits for user {user_id}: {str(e)}")
+        raise Exception(f"Failed to initialize credits: {str(e)}")
+
+
 @router.get("/balance")
 async def get_credit_balance(
     user_id: str = Depends(get_current_user_id),
@@ -25,6 +69,9 @@ async def get_credit_balance(
 ):
     """Get user's current credit balance"""
     try:
+        # Initialize if doesn't exist
+        await initialize_user_credits(db, user_id)
+        
         user = await db.users.find_one({"_id": ObjectId(user_id)})
         if not user:
             raise HTTPException(status_code=404, detail="User not found")

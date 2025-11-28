@@ -32169,3 +32169,66 @@ AttributeError: 'Settings' object has no attribute 'MONGODB_URL'
 2025-11-27 15:31:58,365 - main - INFO - [INFO] Connecting to MongoDB...
 2025-11-27 15:31:58,366 - app.database.connection - INFO - [ATTEMPT 1/3] MongoDB connection...
 2025-11-27 15:31:58,391 - app.database.connection - INFO - [CHECK] Testing connection with ping...
+2025-11-27 15:32:08,404 - app.database.connection - ERROR - [TIMEOUT] Connection timeout on attempt 1
+2025-11-27 15:32:10,418 - app.database.connection - INFO - [ATTEMPT 2/3] MongoDB connection...
+2025-11-27 15:32:10,421 - app.database.connection - INFO - [CHECK] Testing connection with ping...
+2025-11-27 15:32:20,433 - app.database.connection - ERROR - [TIMEOUT] Connection timeout on attempt 2
+2025-11-27 15:32:24,447 - app.database.connection - INFO - [ATTEMPT 3/3] MongoDB connection...
+2025-11-27 15:32:24,450 - app.database.connection - INFO - [CHECK] Testing connection with ping...
+2025-11-27 15:32:34,478 - app.database.connection - ERROR - [TIMEOUT] Connection timeout on attempt 3
+2025-11-27 15:32:34,523 - app.database.connection - CRITICAL - Failed to connect to MongoDB after 3 attempts
+2025-11-27 15:32:34,560 - main - CRITICAL - [FAIL] MongoDB connection failed: Failed to connect to MongoDB after 3 attempts: 
+2025-11-27 15:32:34,637 - main - CRITICAL - [CRITICAL] Application cannot start without database connection
+2025-11-27 15:32:34,692 - main - WARNING - [WARNING] App starting in degraded mode - database unavailable
+2025-11-27 15:32:34,760 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-11-27 15:32:34,840 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-11-27 15:32:34,853 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-11-27 15:32:34,854 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-11-27 15:32:34,855 - main - ERROR - [WARN] Scheduler start failed: Invalid weekday name "sunday"
+2025-11-27 15:32:34,855 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2025-11-27 15:32:34,858 - apscheduler.scheduler - INFO - Added job "KeepAliveService._ping" to job store "default"
+2025-11-27 15:32:34,858 - apscheduler.scheduler - INFO - Scheduler started
+2025-11-27 15:32:34,859 - app.monitoring.keep_alive - INFO - ✓ Keep-alive service started (pings every 14 min)
+2025-11-27 15:32:34,860 - main - INFO - [OK] Keep-alive service started (Render optimization)
+2025-11-27 15:32:34,861 - main - INFO - ============================================================
+2025-11-27 15:32:34,861 - main - INFO - Application startup complete!
+2025-11-27 15:32:34,861 - main - INFO - ============================================================
+2025-11-27 15:46:34,903 - apscheduler.executors.default - INFO - Running job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-27 16:00:34 WAT)" (scheduled at 2025-11-27 15:46:34.855950+01:00)
+2025-11-27 15:46:52,062 - app.monitoring.keep_alive - ERROR - [PING] Failed: 
+2025-11-27 15:46:52,069 - apscheduler.executors.default - INFO - Job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-27 16:00:34 WAT)" executed successfully
+2025-11-27 16:00:34,867 - apscheduler.executors.default - INFO - Running job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-27 16:14:34 WAT)" (scheduled at 2025-11-27 16:00:34.855950+01:00)
+2025-11-27 16:00:41,137 - app.monitoring.keep_alive - ERROR - [PING] Failed: 
+2025-11-27 16:00:41,143 - apscheduler.executors.default - INFO - Job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-27 16:14:34 WAT)" executed successfully
+2025-11-27 16:14:34,864 - apscheduler.executors.default - INFO - Running job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-27 16:28:34 WAT)" (scheduled at 2025-11-27 16:14:34.855950+01:00)
+2025-11-27 16:14:35,603 - app.monitoring.keep_alive - ERROR - [PING] Failed: [Errno 11001] getaddrinfo failed
+2025-11-27 16:14:35,606 - apscheduler.executors.default - INFO - Job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-27 16:28:34 WAT)" executed successfully
+2025-11-27 16:28:34,865 - apscheduler.executors.default - INFO - Running job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-27 16:42:34 WAT)" (scheduled at 2025-11-27 16:28:34.855950+01:00)
+2025-11-27 16:28:35,562 - app.monitoring.keep_alive - ERROR - [PING] Failed: [Errno 11001] getaddrinfo failed
+2025-11-27 16:28:35,565 - apscheduler.executors.default - INFO - Job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-27 16:42:34 WAT)" executed successfully
+2025-11-27 16:42:34,867 - apscheduler.executors.default - INFO - Running job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-27 16:56:34 WAT)" (scheduled at 2025-11-27 16:42:34.855950+01:00)
+2025-11-27 16:42:40,572 - app.monitoring.keep_alive - ERROR - [PING] Failed: 
+2025-11-27 16:42:40,578 - apscheduler.executors.default - INFO - Job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-27 16:56:34 WAT)" executed successfully
+2025-11-27 16:56:34,871 - apscheduler.executors.default - INFO - Running job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-27 17:10:34 WAT)" (scheduled at 2025-11-27 16:56:34.855950+01:00)
+2025-11-27 16:56:40,620 - app.monitoring.keep_alive - ERROR - [PING] Failed: 
+2025-11-27 16:56:40,626 - apscheduler.executors.default - INFO - Job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-27 17:10:34 WAT)" executed successfully
+2025-11-27 17:10:34,861 - apscheduler.executors.default - INFO - Running job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-27 17:24:34 WAT)" (scheduled at 2025-11-27 17:10:34.855950+01:00)
+2025-11-27 17:10:41,091 - app.monitoring.keep_alive - ERROR - [PING] Failed: 
+2025-11-27 17:10:41,097 - apscheduler.executors.default - INFO - Job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-27 17:24:34 WAT)" executed successfully
+2025-11-27 17:24:34,866 - apscheduler.executors.default - INFO - Running job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-27 17:38:34 WAT)" (scheduled at 2025-11-27 17:24:34.855950+01:00)
+2025-11-27 17:24:35,592 - app.monitoring.keep_alive - ERROR - [PING] Failed: [Errno 11001] getaddrinfo failed
+2025-11-27 17:24:35,596 - apscheduler.executors.default - INFO - Job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-27 17:38:34 WAT)" executed successfully
+2025-11-27 17:38:34,875 - apscheduler.executors.default - INFO - Running job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-27 17:52:34 WAT)" (scheduled at 2025-11-27 17:38:34.855950+01:00)
+2025-11-27 17:38:35,587 - app.monitoring.keep_alive - ERROR - [PING] Failed: [Errno 11001] getaddrinfo failed
+2025-11-27 17:38:35,590 - apscheduler.executors.default - INFO - Job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-27 17:52:34 WAT)" executed successfully
+2025-11-27 17:52:34,856 - apscheduler.executors.default - INFO - Running job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-27 18:06:34 WAT)" (scheduled at 2025-11-27 17:52:34.855950+01:00)
+2025-11-27 17:52:35,565 - app.monitoring.keep_alive - ERROR - [PING] Failed: [Errno 11001] getaddrinfo failed
+2025-11-27 17:52:35,568 - apscheduler.executors.default - INFO - Job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-27 18:06:34 WAT)" executed successfully
+2025-11-27 18:06:34,856 - apscheduler.executors.default - INFO - Running job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-27 18:20:34 WAT)" (scheduled at 2025-11-27 18:06:34.855950+01:00)
+2025-11-27 18:06:35,548 - app.monitoring.keep_alive - ERROR - [PING] Failed: [Errno 11001] getaddrinfo failed
+2025-11-27 18:06:35,551 - apscheduler.executors.default - INFO - Job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-27 18:20:34 WAT)" executed successfully
+2025-11-27 18:20:34,871 - apscheduler.executors.default - INFO - Running job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-27 18:34:34 WAT)" (scheduled at 2025-11-27 18:20:34.855950+01:00)
+2025-11-27 18:20:35,713 - app.monitoring.keep_alive - ERROR - [PING] Failed: [Errno 11001] getaddrinfo failed
+2025-11-27 18:20:35,716 - apscheduler.executors.default - INFO - Job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-27 18:34:34 WAT)" executed successfully
+2025-11-27 18:34:34,871 - apscheduler.executors.default - INFO - Running job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-27 18:48:34 WAT)" (scheduled at 2025-11-27 18:34:34.855950+01:00)
+2025-11-27 18:34:35,637 - app.monitoring.keep_alive - ERROR - [PING] Failed: [Errno 11001] getaddrinfo failed
+2025-11-27 18:34:35,639 - apscheduler.executors.default - INFO - Job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-27 18:48:34 WAT)" executed successfully

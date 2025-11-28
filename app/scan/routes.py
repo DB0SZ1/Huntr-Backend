@@ -12,6 +12,7 @@ import uuid
 from app.database.connection import get_database
 from app.auth.oauth import get_current_user
 from app.credits.manager import CreditManager
+from app.credits.routes import initialize_user_credits
 from config import TIER_LIMITS, CREDIT_COSTS
 
 logger = logging.getLogger(__name__)
@@ -23,70 +24,100 @@ async def start_scan(
     current_user: dict = Depends(get_current_user),
     db = Depends(get_database)
 ):
-    """Start a scan with proper credit deduction"""
+    """Start a scan with proper credit deduction based on user tier"""
     try:
-        user_id = current_user.get("_id")
+        user_id = str(current_user.get("_id"))
         CREDITS_REQUIRED = 5
         
-        # ✅ STEP 1: Get current credit balance
+        # ✅ STEP 1: Initialize credits if not exists (using tier-based values from config)
+        await initialize_user_credits(db, user_id)
+        
+        # ✅ STEP 2: Get user and determine tier
+        user = await db.users.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        user_tier = user.get("tier", "free")
+        daily_credits = TIER_LIMITS.get(user_tier, {}).get("daily_credits", 10)
+        
+        # ✅ STEP 3: Get or create credit record with daily reset
         credit_record = await db.user_credits.find_one({"user_id": user_id})
         
         if not credit_record:
-            raise HTTPException(status_code=400, detail="Credit record not initialized")
+            raise HTTPException(
+                status_code=400,
+                detail="Credit record not initialized"
+            )
         
-        # ✅ STEP 2: Check daily reset
+        # ✅ STEP 4: Check if daily reset is needed
         now = datetime.utcnow()
-        last_refill = credit_record.get("last_refill_date", now)
+        last_refill = credit_record.get("last_refill", now)
         
-        if now >= last_refill + timedelta(days=1):
-            daily_total = 50 if current_user.get("tier") == "pro" else 10
+        # Reset if more than 24 hours have passed
+        if (now - last_refill).days >= 1 or (now - last_refill).total_seconds() >= 86400:
             await db.user_credits.update_one(
                 {"user_id": user_id},
-                {"$set": {
-                    "daily_credits_used": 0,
-                    "daily_credits_total": daily_total,
-                    "last_refill_date": now,
-                    "next_refill_time": now + timedelta(days=1)
-                }}
+                {
+                    "$set": {
+                        "current_credits": daily_credits,
+                        "daily_credits": daily_credits,
+                        "daily_credits_used": 0,
+                        "last_refill": now,
+                        "next_refill": now + timedelta(days=1),
+                        "tier": user_tier,
+                        "updated_at": now
+                    }
+                }
             )
             credit_record = await db.user_credits.find_one({"user_id": user_id})
+            logger.info(f"Credits reset for user {user_id}: {daily_credits} credits (tier: {user_tier})")
         
-        # ✅ STEP 3: Calculate available credits
-        daily_total = credit_record.get("daily_credits_total", 10)
-        daily_used = credit_record.get("daily_credits_used", 0)
-        available_credits = daily_total - daily_used
+        # ✅ STEP 5: Get current available credits
+        available_credits = credit_record.get("current_credits", 0)
         
-        # ✅ STEP 4: Check if sufficient
+        # ✅ STEP 6: Check if sufficient credits
         if available_credits < CREDITS_REQUIRED:
+            next_refill = credit_record.get("next_refill", now + timedelta(days=1))
+            hours_until = max(0, round((next_refill - now).total_seconds() / 3600))
+            
             return {
                 "success": False,
+                "error": "insufficient_credits",
                 "message": f"Insufficient credits. This scan requires {CREDITS_REQUIRED} credits.",
                 "credits_needed": CREDITS_REQUIRED,
-                "current_credits": available_credits  # ← FIX: Use calculated available credits
+                "credits_available": available_credits,
+                "credits_per_day": daily_credits,
+                "next_refill_in_hours": hours_until
             }
         
-        # ✅ STEP 5: Deduct credits
-        new_daily_used = daily_used + CREDITS_REQUIRED
+        # ✅ STEP 7: Deduct credits
+        new_available = available_credits - CREDITS_REQUIRED
+        daily_used = credit_record.get("daily_credits_used", 0) + CREDITS_REQUIRED
         total_used = credit_record.get("total_credits_used", 0) + CREDITS_REQUIRED
         
         await db.user_credits.update_one(
             {"user_id": user_id},
-            {"$set": {
-                "daily_credits_used": new_daily_used,
-                "total_credits_used": total_used
-            }}
+            {
+                "$set": {
+                    "current_credits": new_available,
+                    "daily_credits_used": daily_used,
+                    "total_credits_used": total_used,
+                    "updated_at": now
+                }
+            }
         )
         
-        # ✅ STEP 6: Log transaction
+        # ✅ STEP 8: Log transaction
         await db.credit_transactions.insert_one({
             "user_id": user_id,
             "amount": CREDITS_REQUIRED,
             "operation_type": "scan_started",
             "timestamp": now,
-            "remaining_daily": daily_total - new_daily_used
+            "remaining_credits": new_available,
+            "tier": user_tier
         })
         
-        # Create scan record
+        # ✅ STEP 9: Create scan record
         scan_record = {
             "user_id": user_id,
             "status": "running",
@@ -97,15 +128,22 @@ async def start_scan(
         
         result = await db.scans.insert_one(scan_record)
         
+        logger.info(f"Scan started for user {user_id}: {CREDITS_REQUIRED} credits deducted (tier: {user_tier})")
+        
         return {
             "success": True,
-            "message": "Scan started",
+            "message": "Scan started successfully",
             "scan_id": str(result.inserted_id),
             "credits_deducted": CREDITS_REQUIRED,
-            "credits_remaining": daily_total - new_daily_used
+            "credits_remaining": new_available,
+            "tier": user_tier,
+            "daily_credits": daily_credits
         }
     
+    except HTTPException:
+        raise
     except Exception as e:
+        logger.error(f"Error starting scan: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error starting scan: {str(e)}")
 
 
