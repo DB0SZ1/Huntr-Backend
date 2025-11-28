@@ -32285,3 +32285,6 @@ AttributeError: 'Settings' object has no attribute 'MONGODB_URL'
 2025-11-28 10:13:55,858 - apscheduler.executors.default - INFO - Running job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-28 10:27:55 WAT)" (scheduled at 2025-11-28 10:13:55.830488+01:00)
 2025-11-28 10:14:01,888 - app.monitoring.keep_alive - ERROR - [PING] Failed: 
 2025-11-28 10:14:01,910 - apscheduler.executors.default - INFO - Job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-28 10:27:55 WAT)" executed successfully
+2025-11-28 10:27:55,848 - apscheduler.executors.default - INFO - Running job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-28 10:41:55 WAT)" (scheduled at 2025-11-28 10:27:55.830488+01:00)
+2025-11-28 10:28:01,860 - app.monitoring.keep_alive - ERROR - [PING] Failed: 
+2025-11-28 10:28:01,866 - apscheduler.executors.default - INFO - Job "KeepAliveService._ping (trigger: interval[0:14:00], next run at: 2025-11-28 10:41:55 WAT)" executed successfully
