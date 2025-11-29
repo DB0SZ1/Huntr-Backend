@@ -111,7 +111,7 @@ TIER_LIMITS = {
     "free": {
         "max_niches": 1,
         "scans_per_day": 2,
-        "curated_gigs_per_scan": 3,
+        "curated_gigs_per_scan": 5,
         "scan_interval_minutes": 0,
         "auto_scan_enabled": False,
         "monthly_opportunities_limit": 50,
@@ -120,20 +120,20 @@ TIER_LIMITS = {
         "features": [
             "Create 1 niche",
             "2 scans per day",
-            "3 curated gigs per scan",
+            "5 curated gigs per scan",
             "Scam detection",
             "Salary detection",
             "Manual scanning only",
             "Up to 50 opportunities/month",
             "Email notifications"
         ],
-        "platforms": ["Twitter/X", "Reddit"],
+        "platforms": ["Twitter/X", "Reddit, Telegram"],
         "price_ngn": 0,
     },
     "pro": {
         "max_niches": 5,
         "scans_per_day": 5,
-        "curated_gigs_per_scan": 4,
+        "curated_gigs_per_scan": 10,
         "scan_interval_minutes": 90,
         "auto_scan_enabled": True,
         "monthly_opportunities_limit": 500,
@@ -142,7 +142,7 @@ TIER_LIMITS = {
         "features": [
             "Create up to 5 niches",
             "5 scans per day",
-            "4 curated gigs per scan",
+            "10 curated gigs per scan",
             "Advanced scam detection",
             "Salary detection & analysis",
             "Automatic scans every 90 minutes",
@@ -261,7 +261,7 @@ PLATFORM_CONFIGS = {
     'Telegram': {
         'enabled': True,
         'requires_api_key': True,
-        'free_tier': False
+        'free_tier': True
     }
 }
 
