@@ -113,12 +113,14 @@ async def signup(
         hashed_password = PasswordHandler.hash_password(data.password)
         
         # Create new user
+        # NOTE: Don't include google_id for traditional auth - omit it entirely
+        # This avoids unique index constraint violations on null values
         new_user = {
             "email": data.email,
             "name": data.name,
             "password_hash": hashed_password,
             "auth_method": "email",  # Track auth method
-            "google_id": None,
+            # google_id intentionally omitted for traditional auth
             "profile_picture": None,
             "tier": "free",
             "is_active": True,

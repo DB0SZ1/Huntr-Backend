@@ -62,7 +62,7 @@ class UserSettings(BaseModel):
 class UserModel(BaseModel):
     """Enhanced user document model with full validation"""
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
-    google_id: str = Field(..., min_length=1)
+    google_id: Optional[str] = Field(None, min_length=1)  # Optional - not set for traditional auth
     email: EmailStr
     name: str = Field(..., min_length=1, max_length=100)
     profile_picture: Optional[str] = None
