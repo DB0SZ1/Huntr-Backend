@@ -25,21 +25,47 @@ class PasswordHandler:
     """Handle password operations"""
     
     @staticmethod
+    def _truncate_to_72_bytes(password: str) -> str:
+        """
+        Truncate password to exactly 72 bytes for bcrypt
+        Handles multi-byte UTF-8 characters correctly
+        """
+        password_bytes = password.encode('utf-8')
+        if len(password_bytes) <= 72:
+            return password
+        
+        # Truncate to 72 bytes, then decode back to string
+        # Handle potential UTF-8 character boundaries
+        truncated = password_bytes[:72]
+        
+        # Try to decode; if it fails, keep removing bytes until valid
+        while len(truncated) > 0:
+            try:
+                return truncated.decode('utf-8')
+            except UnicodeDecodeError:
+                truncated = truncated[:-1]
+        
+        # Fallback (should never reach here)
+        return password[:50]
+    
+    @staticmethod
     def hash_password(password: str) -> str:
-        """Hash a password with bcrypt 72-byte limit"""
-        # Bcrypt has a 72-byte limit - truncate if necessary
-        if len(password.encode('utf-8')) > 72:
-            password = password[:72]
-        return pwd_context.hash(password)
+        """Hash a password with bcrypt (handles 72-byte limit)"""
+        try:
+            # Truncate to 72 bytes
+            truncated_password = PasswordHandler._truncate_to_72_bytes(password)
+            return pwd_context.hash(truncated_password)
+        except Exception as e:
+            logger.error(f"Password hashing error: {str(e)}")
+            raise
     
     @staticmethod
     def verify_password(plain_password: str, hashed_password: str) -> bool:
         """Verify a password against hash (handles 72-byte bcrypt limit)"""
         try:
             # Truncate to 72 bytes to match hash_password behavior
-            if len(plain_password.encode('utf-8')) > 72:
-                plain_password = plain_password[:72]
-            return pwd_context.verify(plain_password, hashed_password)
+            truncated_password = PasswordHandler._truncate_to_72_bytes(plain_password)
+            return pwd_context.verify(truncated_password, hashed_password)
         except Exception as e:
             logger.error(f"Password verification error: {str(e)}")
             return False
