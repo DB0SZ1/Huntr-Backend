@@ -17,6 +17,7 @@ from app.credits.manager import CreditManager
 from app.credits.routes import initialize_user_credits
 from config import TIER_LIMITS, CREDIT_COSTS
 from app.jobs.scraper import scrape_platforms_for_user
+from app.cache.opportunity_cache import OpportunityCacheManager
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/scans", tags=["Scans"])
@@ -57,11 +58,21 @@ async def perform_scan_background(
         
         logger.info(f"[SCAN] Scraping for user {user_id} (tier: {user_tier}) on platforms: {platforms_to_scan}")
         
-        # Perform the actual scraping with the platforms list
-        results = await scrape_platforms_for_user(
-            platforms=platforms_to_scan,
-            max_concurrent=3
-        )
+        # Use cache-aware scraping: get from cache if fresh, otherwise scrape
+        try:
+            results = await OpportunityCacheManager.get_or_scrape_opportunities(
+                db=db,
+                platforms=platforms_to_scan,
+                scraper_function=scrape_platforms_for_user,
+                force_refresh=False  # Use cache if available
+            )
+        except Exception as cache_error:
+            logger.warning(f"[CACHE] Error in cached scraping, falling back: {str(cache_error)}")
+            # Fallback to direct scraping if cache manager fails
+            results = await scrape_platforms_for_user(
+                platforms=platforms_to_scan,
+                max_concurrent=3
+            )
         
         # Extract opportunities from results
         all_opportunities = results.get("opportunities", [])
@@ -470,3 +481,105 @@ async def get_scan_history(
     except Exception as e:
         logger.error(f"Error getting scan history: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to get scan history")
+
+
+# ============================================================================
+# CACHE MANAGEMENT ENDPOINTS
+# ============================================================================
+
+@router.get("/cache/stats")
+async def get_cache_stats(
+    current_user: dict = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
+    """
+    Get opportunity cache statistics
+    Shows how many opportunities are cached and reused
+    """
+    try:
+        stats = await OpportunityCacheManager.get_cache_stats(db)
+        return {
+            "status": "success",
+            "cache": stats,
+            "message": f"Cache has {stats.get('fresh_entries', 0)} fresh opportunities"
+        }
+    except Exception as e:
+        logger.error(f"Error getting cache stats: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to get cache stats")
+
+
+@router.post("/cache/refresh")
+async def refresh_cache(
+    current_user: dict = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
+    """
+    Force cache refresh - triggers fresh scraping
+    Admin/Premium only
+    """
+    try:
+        user = await db.users.find_one({"_id": ObjectId(current_user.get("id"))})
+        if not user or user.get("tier") not in ["premium", "admin"]:
+            raise HTTPException(
+                status_code=403,
+                detail="Only premium users can force cache refresh"
+            )
+        
+        # Get all platforms
+        tier_config = TIER_LIMITS.get(user.get("tier", "free"), {})
+        platforms = tier_config.get("platforms", [])
+        
+        logger.info(f"[CACHE] Force refresh initiated by user {current_user.get('id')}")
+        
+        # Perform fresh scraping (bypassing cache)
+        results = await OpportunityCacheManager.get_or_scrape_opportunities(
+            db=db,
+            platforms=platforms,
+            scraper_function=scrape_platforms_for_user,
+            force_refresh=True  # FORCE fresh scrape
+        )
+        
+        return {
+            "status": "success",
+            "message": f"Cache refreshed with {len(results.get('opportunities', []))} opportunities",
+            "opportunities_found": len(results.get("opportunities", [])),
+            "platforms": platforms
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error refreshing cache: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to refresh cache")
+
+
+@router.delete("/cache/cleanup")
+async def cleanup_cache(
+    current_user: dict = Depends(get_current_user),
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
+    """
+    Remove expired cache entries
+    Admin only
+    """
+    try:
+        user = await db.users.find_one({"_id": ObjectId(current_user.get("id"))})
+        if not user or user.get("tier") != "admin":
+            raise HTTPException(
+                status_code=403,
+                detail="Only admins can cleanup cache"
+            )
+        
+        deleted_count = await OpportunityCacheManager.cleanup_expired_cache(db)
+        
+        return {
+            "status": "success",
+            "message": f"Cleaned up {deleted_count} expired cache entries",
+            "deleted_count": deleted_count
+        }
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error cleaning cache: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to cleanup cache")

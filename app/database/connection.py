@@ -288,6 +288,15 @@ class MongoDBManager:
             except Exception as e:
                 logger.error(f"Failed to create usage_tracking indexes: {str(e)}")
             
+            # Opportunity cache collection (for caching scraped opportunities)
+            try:
+                await db.opportunity_cache.create_index("cache_key", unique=True)
+                await db.opportunity_cache.create_index([("platform", 1), ("cached_at", -1)])
+                await db.opportunity_cache.create_index("expires_at", expireAfterSeconds=0)  # Auto-delete on expiry
+                await db.opportunity_cache.create_index([("used_count", -1)])  # Most used first
+            except Exception as e:
+                logger.error(f"Failed to create opportunity_cache indexes: {str(e)}")
+            
             if critical_indexes_failed:
                 raise OperationFailure("Critical indexes failed to create")
             
