@@ -14,7 +14,6 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from modules.scrapers import (
     scrape_telegram_channels,
-    scrape_reddit_jobs,
     scrape_telegram_channels_async
 )
 import logging
@@ -25,35 +24,6 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
-
-
-def test_reddit_scraper():
-    """Test Reddit scraper - SYNC function"""
-    print("\n" + "="*60)
-    print("[TEST] TESTING REDDIT SCRAPER")
-    print("="*60)
-    
-    try:
-        logger.info("Starting Reddit scraper test...")
-        opportunities = scrape_reddit_jobs()
-        
-        print(f"\n[SUCCESS] Reddit Scraper worked!")
-        print(f"   Found: {len(opportunities)} opportunities")
-        
-        if opportunities:
-            print(f"\n   Sample opportunity:")
-            opp = opportunities[0]
-            print(f"   - Title: {opp.get('title', 'N/A')[:50]}...")
-            print(f"   - Platform: {opp.get('platform', 'N/A')}")
-            print(f"   - Contact: {opp.get('contact', 'N/A')[:50]}...")
-        
-        return True, len(opportunities)
-    
-    except Exception as e:
-        print(f"\n[FAILED] Reddit Scraper FAILED")
-        print(f"   Error: {str(e)}")
-        logger.error(f"Reddit scraper error: {str(e)}", exc_info=True)
-        return False, 0
 
 
 def test_telegram_scraper_sync():
@@ -158,10 +128,6 @@ async def main():
     print(f"  - TELEGRAM_API_HASH: {'SET' if os.getenv('TELEGRAM_API_HASH') else 'NOT SET'}")
     
     results = []
-    
-    # Test Reddit (sync)
-    success, count = test_reddit_scraper()
-    results.append(("Reddit", success, count))
     
     # Test Telegram sync directly
     success, count = test_telegram_scraper_sync()

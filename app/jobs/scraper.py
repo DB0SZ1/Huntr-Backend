@@ -16,7 +16,6 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '../..'))
 
 from modules.scrapers import (
     scrape_twitter_comprehensive,
-    scrape_reddit_jobs,
     scrape_telegram_channels,
     scrape_pumpfun,
     scrape_coinmarketcap_new,

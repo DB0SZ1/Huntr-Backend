@@ -1236,11 +1236,10 @@ def scrape_all_platforms():
     
     # ALL scrapers in priority order
     scrapers = [
-        ("Reddit", scrape_reddit_jobs),
         ("Pump.fun", scrape_pumpfun),
         ("Web3.career", scrape_web3_jobs),
         ("Twitter/X", scrape_twitter_comprehensive),
-        ("Telegram", scrape_telegram_channels),  # NOW ENABLED WITH 200+ CHANNELS
+        ("Telegram", scrape_telegram_channels),  # NOW ENABLED WITH 85+ ACTIVE CHANNELS
         ("CoinMarketCap", scrape_coinmarketcap_new),
         ("DexScreener", scrape_dexscreener_enhanced),
         ("CoinGecko", scrape_coingecko_new)

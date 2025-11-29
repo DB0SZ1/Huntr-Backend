@@ -14,7 +14,6 @@ from config import TIER_LIMITS, CREDIT_COSTS
 # Import scrapers from modules (not app.scraper)
 from modules.scrapers import (
     scrape_twitter_comprehensive,
-    scrape_reddit_jobs,
     scrape_web3_jobs,
     scrape_pumpfun,
     scrape_dexscreener_enhanced,
@@ -206,9 +205,6 @@ def scan_platform(
         
         if platform == 'Twitter/X':
             opportunities = scrape_twitter_comprehensive() or []
-        
-        elif platform == 'Reddit':
-            opportunities = scrape_reddit_jobs() or []
         
         elif platform == 'Web3.career':
             opportunities = scrape_web3_jobs() or []
