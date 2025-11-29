@@ -53,7 +53,7 @@ async def perform_scan_background(
         
         # Get platforms for this tier from config
         tier_config = TIER_LIMITS.get(user_tier, TIER_LIMITS.get("free", {}))
-        platforms_to_scan = tier_config.get("platforms", ["Twitter/X", "Reddit"])
+        platforms_to_scan = tier_config.get("platforms", ["Twitter/X", "Telegram"])
         
         logger.info(f"[SCAN] Scraping for user {user_id} (tier: {user_tier}) on platforms: {platforms_to_scan}")
         

@@ -243,6 +243,18 @@ async def list_user_niches(
         List of user's niches
     """
     try:
+        # CLEANUP: Remove Redis from any old niches if they have it
+        # This handles niches created before Reddit was removed from the platform
+        await db.niche_configs.update_many(
+            {
+                "user_id": user_id,
+                "platforms": "Reddit"
+            },
+            {
+                "$pull": {"platforms": "Reddit"}
+            }
+        )
+        
         # Build query
         query = {"user_id": user_id}
         if active_only:
@@ -350,11 +362,27 @@ async def create_niche(
             )
         
         # Validate platforms for tier
-        try:
-            validate_tier_platforms(tier, niche_data.platforms)
-        except HTTPException as platform_err:
-            logger.warning(f"[WARN] Platform validation failed for {user_id}: {str(platform_err)}")
-            raise
+        # Filter out any invalid platforms (e.g., Reddit was removed)
+        allowed_platforms = tier_limits.get('platforms', [])
+        valid_platforms = [p for p in niche_data.platforms if p in allowed_platforms]
+        
+        if not valid_platforms:
+            logger.warning(
+                f"[WARN] No valid platforms for user {user_id} ({tier}). "
+                f"Requested: {niche_data.platforms}, Available: {allowed_platforms}"
+            )
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"No valid platforms selected. Available for {tier} tier: {', '.join(allowed_platforms)}"
+            )
+        
+        if len(valid_platforms) < len(niche_data.platforms):
+            invalid = [p for p in niche_data.platforms if p not in allowed_platforms]
+            logger.info(
+                f"[INFO] Filtered out invalid platforms for {user_id}: {invalid}. "
+                f"Using valid platforms: {valid_platforms}"
+            )
+            niche_data.platforms = valid_platforms
         
         # Check for duplicate niche name (case-insensitive)
         existing_niche = await db.niche_configs.find_one({
@@ -513,8 +541,26 @@ async def update_niche(
         if niche_data.platforms is not None:
             user = await get_user_or_404(db, user_id)
             tier = user.get('tier', 'free')
-            validate_tier_platforms(tier, niche_data.platforms)
-            update_data["platforms"] = niche_data.platforms
+            tier_limits = TIER_LIMITS.get(tier, TIER_LIMITS.get('free', {}))
+            allowed_platforms = tier_limits.get('platforms', [])
+            
+            # Filter out invalid platforms
+            valid_platforms = [p for p in niche_data.platforms if p in allowed_platforms]
+            
+            if not valid_platforms:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"No valid platforms selected. Available for {tier} tier: {', '.join(allowed_platforms)}"
+                )
+            
+            if len(valid_platforms) < len(niche_data.platforms):
+                invalid = [p for p in niche_data.platforms if p not in allowed_platforms]
+                logger.info(
+                    f"[INFO] Filtered out invalid platforms for {user_id}: {invalid}. "
+                    f"Using valid platforms: {valid_platforms}"
+                )
+            
+            update_data["platforms"] = valid_platforms
         
         # Perform update
         result = await db.niche_configs.update_one(
