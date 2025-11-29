@@ -157,7 +157,7 @@ TIER_LIMITS = {
     "premium": {
         "max_niches": 20,
         "scans_per_day": 10,
-        "curated_gigs_per_scan": 5,
+        "curated_gigs_per_scan": 15,
         "scan_interval_minutes": 30,
         "auto_scan_enabled": True,
         "monthly_opportunities_limit": 5000,
