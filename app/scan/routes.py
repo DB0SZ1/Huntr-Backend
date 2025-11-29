@@ -160,14 +160,14 @@ async def perform_scan_background(
                     "opportunities_found": len(displayed_opportunities),
                     "total_opportunities_found": len(all_opportunities),
                     "platforms_scanned": platforms_to_scan,
-                    "results": opportunities,
+                    "results": displayed_opportunities,
                     "stats": stats,
                     "updated_at": datetime.utcnow()
                 }
             }
         )
         
-        logger.info(f"[SCAN] ✅ Scan completed: {scan_id} - Found {len(opportunities)} opportunities on {len(platforms_to_scan)} platforms")
+        logger.info(f"[SCAN] ✅ Scan completed: {scan_id} - Found {len(displayed_opportunities)} opportunities on {len(platforms_to_scan)} platforms")
     
     except Exception as e:
         logger.error(f"[SCAN] ❌ Background scan error for {scan_id}: {str(e)}", exc_info=True)

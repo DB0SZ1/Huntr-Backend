@@ -464,12 +464,17 @@ def scrape_telegram_channels():
                                 
                                 telegram_handle = extract_telegram(text, '')
                                 email = extract_email(text)
+                                app_links = extract_application_links(text)
                                 
-                                contact_parts = [f"Check {channel}"]
-                                if telegram_handle:
-                                    contact_parts.insert(0, f"TG: {telegram_handle}")
+                                contact_parts = []
+                                # Prioritize direct application links
+                                if app_links:
+                                    contact_parts.append(f"Apply: {app_links[0]}")
+                                if telegram_handle and telegram_handle != channel:
+                                    contact_parts.append(f"TG: {telegram_handle}")
                                 if email:
-                                    contact_parts.insert(0 if not telegram_handle else 1, f"Email: {email}")
+                                    contact_parts.append(f"Email: {email}")
+                                contact_parts.append(f"Source: {channel}")
                                 
                                 opportunities.append({
                                     'id': f"tg_{msg.id}_{channel.replace('@', '')}",
@@ -477,10 +482,12 @@ def scrape_telegram_channels():
                                     'description': text,
                                     'platform': f'Telegram {channel}',
                                     'url': f"https://t.me/{channel.replace('@', '')}/{msg.id}",
+                                    'application_links': app_links,  # Direct links to apply
                                     'contact': " | ".join(contact_parts),
                                     'telegram': telegram_handle or channel,
+                                    'email': email,
                                     'twitter': None,
-                                    'website': None,
+                                    'website': app_links[0] if app_links else None,
                                     'timestamp': msg.date.isoformat(),
                                     'metadata': {
                                         'channel': channel,
@@ -1058,6 +1065,29 @@ def extract_email(text):
         logger.debug(f"Extracted email: {match.group(0)}")
         return match.group(0)
     return None
+
+def extract_application_links(text):
+    """Extract direct application links (URL, email, or contact info) from job post"""
+    links = []
+    
+    # Extract http/https URLs
+    url_pattern = r'https?://[^\s\)\"<>\[\]]+|www\.[^\s\)\"<>\[\]]+'
+    urls = re.findall(url_pattern, text)
+    links.extend(urls)
+    
+    # Extract t.me links (Telegram)
+    tg_pattern = r'(?:https?://)?t\.me/[^\s\)\"<>\[\]]+'
+    tg_links = re.findall(tg_pattern, text)
+    for tg in tg_links:
+        if tg not in links:
+            links.append(tg)
+    
+    # Extract email
+    email = extract_email(text)
+    if email:
+        links.append(f"mailto:{email}")
+    
+    return links
 
 def extract_urls(tweet):
     """Extract URLs from tweet entities"""
