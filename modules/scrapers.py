@@ -311,8 +311,7 @@ def is_genuine_job_post(text):
 def scrape_telegram_channels():
     """
     ENHANCED: Monitor 200+ Telegram job channels globally with smart filtering
-    Focuses on channels with highest job posting quality across all niches
-    ✅ FIXED FOR RENDER: Uses sync TelegramClient in thread context (asyncio.to_thread)
+    ✅ FIXED FOR RENDER: Creates event loop in thread context for Telethon sync client
     """
     logger.info("Starting ENHANCED Telegram scraping...")
     opportunities = []
@@ -326,6 +325,15 @@ def scrape_telegram_channels():
         return opportunities
     
     try:
+        # ✅ FIX: Create event loop for thread context
+        import asyncio
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            # No event loop in thread - create one
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        
         # Import telethon components
         from telethon.sync import TelegramClient
         from telethon.tl.functions.messages import GetHistoryRequest
@@ -659,7 +667,7 @@ def scrape_telegram_channels():
                                         'channel': channel,
                                         'category': category,
                                         'views': getattr(msg, 'views', 0),
-                                        'confidence_score': job_score,  # Quality indicator
+                                        'confidence_score': job_score,
                                         'is_high_quality': job_score >= 70
                                     }
                                 })
@@ -670,9 +678,9 @@ def scrape_telegram_channels():
                     
                     # Adaptive rate limiting based on progress
                     if idx < 50:
-                        time.sleep(1.5)  # Faster for first 50 channels
+                        time.sleep(1.5)
                     else:
-                        time.sleep(2.5)  # Slower to avoid rate limits
+                        time.sleep(2.5)
                     
                 except FloodWaitError as e:
                     wait_time = e.seconds
@@ -703,9 +711,8 @@ def scrape_telegram_channels():
         print("⚠️  Telethon not installed. Run: pip install telethon")
     except RuntimeError as e:
         if "no current event loop" in str(e).lower():
-            logger.warning(f"Telegram skipped: Event loop issue in thread context - {str(e)}")
-            print(f"⚠️  Telegram scraper skipped (thread context issue)")
-            # Return empty list gracefully instead of crashing
+            logger.error(f"Telegram failed: Event loop issue - {str(e)}")
+            print(f"❌ Telegram scraper failed (event loop error)")
         else:
             logger.error(f"Telegram scraping error: {str(e)}")
             print(f"❌ Telegram scraping error: {str(e)}")
@@ -715,7 +722,6 @@ def scrape_telegram_channels():
     
     logger.info(f"Telegram: Completed with {len(opportunities)} opportunities")
     return opportunities
-
 
 def scrape_telegram_channels_async():
     """
