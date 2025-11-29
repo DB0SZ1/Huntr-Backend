@@ -13,7 +13,7 @@ import re
 from app.database.connection import get_database
 from app.auth.jwt_handler import create_access_token, create_refresh_token, get_current_user_id
 from app.auth.password_handler import PasswordHandler
-from app.notifications.email import send_verification_email, send_password_reset_email
+from app.notifications.email import send_password_reset_email
 from config import settings, TIER_LIMITS
 
 logger = logging.getLogger(__name__)
@@ -122,8 +122,8 @@ async def signup(
             "profile_picture": None,
             "tier": "free",
             "is_active": True,
-            "email_verified": False,
-            "email_verified_at": None,
+            "email_verified": True,  # Auto-verify for traditional signup
+            "email_verified_at": datetime.utcnow(),
             "created_at": datetime.utcnow(),
             "last_login": None,
             "settings": {
@@ -135,27 +135,6 @@ async def signup(
         
         result = await db.users.insert_one(new_user)
         user_id = str(result.inserted_id)
-        
-        # Generate verification token
-        verification_token = PasswordHandler.generate_verification_token(data.email)
-        
-        # Store token in database
-        await db.email_tokens.insert_one({
-            "user_id": user_id,
-            "email": data.email,
-            "token": verification_token,
-            "type": "verification",
-            "created_at": datetime.utcnow(),
-            "expires_at": datetime.utcnow() + timedelta(days=1)
-        })
-        
-        # Send verification email
-        try:
-            await send_verification_email(data.email, data.name, verification_token)
-            email_sent = True
-        except Exception as e:
-            logger.warning(f"Failed to send verification email: {str(e)}")
-            email_sent = False
         
         # Create default free subscription - only if one doesn't exist
         existing_subscription = await db.subscriptions.find_one({"user_id": user_id})
@@ -175,11 +154,22 @@ async def signup(
         
         logger.info(f"New user registered: {data.email} (ID: {user_id})")
         
+        # Generate tokens for immediate login
+        access_token = create_access_token(user_id)
+        refresh_token = create_refresh_token(user_id)
+        
         return {
             "message": "Signup successful",
             "user_id": user_id,
-            "email_verification_sent": email_sent,
-            "next_step": "Verify your email to activate your account"
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer",
+            "user": {
+                "id": user_id,
+                "email": data.email,
+                "name": data.name,
+                "tier": "free"
+            }
         }
     
     except HTTPException:
@@ -220,13 +210,6 @@ async def login(
             raise HTTPException(
                 status_code=401,
                 detail="Invalid email or password"
-            )
-        
-        # Check if email is verified
-        if not user.get('email_verified', False):
-            raise HTTPException(
-                status_code=403,
-                detail="Please verify your email first"
             )
         
         if not user.get('is_active', True):
