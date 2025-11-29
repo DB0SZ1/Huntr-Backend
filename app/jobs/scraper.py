@@ -73,7 +73,7 @@ SCRAPER_CONFIG = {
     },
     'Telegram': {
         'function': scrape_telegram_channels,
-        'timeout': 120,
+        'timeout': 300,  # Increased from 120s to 300s (5 min) for 147 channels + Telegram flood waits
         'retries': 1,
         'rate_limit_per_hour': 20,
         'requires_api': True

@@ -287,55 +287,33 @@ def scrape_telegram_channels():
                 '@cppjobs'
             ],
             
-            # === REMOTE & FREELANCE - VERIFIED ACTIVE ===
-            'remote_freelance': [
-                '@remoteworkers',
-                '@workremotely'
-            ],
-            
             # === DESIGN & CREATIVE - VERIFIED ACTIVE ===
             'design_creative': [
-                '@designjobs', '@uiuxjobs',
-                '@creativejobs',
-                '@productdesignjobs', '@visualdesigners',
-                '@3djobs',
-                '@animationjobs'
+                '@designjobs'
             ],
             
             # === MARKETING & GROWTH - VERIFIED ACTIVE ===
             'marketing_growth': [
-                '@marketingjobs',
                 '@contentwriterjobs',
-                '@seojobs',
-                '@affiliatemarketingjobs',
-                '@copywriterjobs'
+                '@seojobs'
             ],
             
             # === COMMUNITY & SOCIAL MEDIA - VERIFIED ACTIVE ===
             'community_social': [
-                '@communityjobs', '@communitymanagerjobs',
-                '@moderatorjobs',
-                '@socialmediacareers'
+                '@moderatorjobs'
             ],
             
             # === DATA & AI - VERIFIED ACTIVE ===
             'data_ai': [
-                '@datajobs', '@datasciencejobs', '@mljobs', '@aijobs',
+                '@datajobs', '@datasciencejobs',
                 '@dataanalystjobs',
-                '@deeplearningjobs',
-                '@nlpjobs',
-                '@machinelearningjobs',
-                '@computervisionjobs',
-                '@airesearchjobs'
+                '@machinelearningjobs'
             ],
             
             # === PRODUCT & MANAGEMENT (EXPANDED) ===
             'product_mgmt': [
-                '@productjobs', '@productmanagerjobs', '@projectmanagerjobs',
-                '@scrummasterjobs', '@agilecoach', '@productowners',
-                '@techleadjobs', '@engineeringmanagers',
-                '@pmjobs', '@tpmjobs', '@programmanagement', '@productops',
-                '@productdesign_jobs', '@productleadership'
+                '@tpmjobs', '@programmanagement', '@productops',
+                '@productleadership'
             ],
             
             # === SALES & BUSINESS DEV - VERIFIED ACTIVE ===
@@ -346,125 +324,81 @@ def scrape_telegram_channels():
             
             # === BLOCKCHAIN ECOSYSTEMS - VERIFIED ACTIVE ===
             'blockchain_ecosystems': [
-                '@solanacareers', '@ethereumtalent',
-                '@cardanojobs',
-                '@avalanche_careers',
-                '@arbitrumjobs',
-                '@aptoslabs_jobs'
             ],
             
             # === DEFI & DAPPS - VERIFIED ACTIVE ===
             'defi_dapps': [
-                '@deficareers',
-                '@aavejobs',
-                '@uniswaptalent',
-                '@dydxcareers',
-                '@dappjobs'
             ],
             
             # === NFT & GAMING - VERIFIED ACTIVE ===
             'nft_gaming': [
-                '@gamefi_jobs',
-                '@metaversecareers',
-                '@web3gamingjobs',
-                '@playtoearn_jobs',
-                '@cryptogamejobs'
             ],
             
             # === REGIONAL - NORTH AMERICA - VERIFIED ACTIVE ===
             'regional_north_america': [
-                '@jobsusa', '@jobscanada',
-                '@nyctech_jobs'
             ],
             
             # === REGIONAL - EUROPE - VERIFIED ACTIVE ===
             'regional_europe': [
-                '@jobseurope', '@jobsuk',
-                '@londontechjobs'
             ],
             
             # === REGIONAL - ASIA PACIFIC - VERIFIED ACTIVE ===
             'regional_asia_pacific': [
-                '@jobsasia', '@jobsindia', '@jobsaustralia', '@jobssingapore',
-                '@singaporetechjobs'
+                '@jobssingapore'
             ],
             
             # === REGIONAL - LATIN AMERICA - VERIFIED ACTIVE ===
             'regional_latam': [
-                '@jobslatam', '@jobsbrazil', '@jobsmexico'
             ],
             
             # === REGIONAL - AFRICA & MIDDLE EAST ===
             'regional_africa_mena': [
-                '@jobsafrica', '@jobsnigeria', '@jobskenya', '@jobssouthafrica',
-                '@africatechjobs', '@nigeriatechjobs', '@kenyajobs',
-                '@ghanatechjobs', '@capetownjobs', '@nairobijobs',
-                '@lagostechjobs', '@middleeastjobs', '@dubaijobs'
+                '@lagostechjobs'
             ],
             
             # === CYBERSECURITY (NEW CATEGORY) ===
             'cybersecurity': [
-                '@cybersecurityjobs', '@infosecjobs', '@pentestjobs',
-                '@ethicalhackingjobs', '@securityengineer_jobs',
-                '@securityanalystjobs', '@cisojobs', '@secopsJobs'
+                '@cybersecurityjobs'
             ],
             
             # === CLOUD & DEVOPS - VERIFIED ACTIVE ===
             'cloud_devops': [
-                '@devopsjobs', '@cloudjobs', '@awsjobs',
-                '@kubernestesjobs',
-                '@srejobs'
             ],
             
             # === QA & TESTING - VERIFIED ACTIVE ===
             'qa_testing': [
-                '@qaengineer', '@testautomationjobs'
             ],
             
             # === FINTECH - VERIFIED ACTIVE ===
             'fintech': [
-                '@fintechjobs'
             ],
             
             # === HEALTHTECH & BIOTECH - VERIFIED ACTIVE ===
             'healthtech': [
-                '@healthtechjobs'
             ],
             
             # === EDTECH - VERIFIED ACTIVE ===
             'edtech': [
-                '@edtechjobs'
             ],
             
             # === STARTUPS & VENTURE - VERIFIED ACTIVE ===
             'startup_venture': [
-                '@startupjobs',
-                '@venturejobs',
-                '@techstartupjobs'
             ],
             
             # === NO-CODE & LOW-CODE - VERIFIED ACTIVE ===
             'nocode_lowcode': [
-                '@nocodejobs',
-                '@lowcodejobs',
-                '@automationjobs'
             ],
             
             # === WRITING & CONTENT - VERIFIED ACTIVE ===
             'writing_content': [
-                '@contentwriterjobs'
             ],
             
             # === BLOCKCHAIN SECURITY - VERIFIED ACTIVE ===
             'blockchain_security': [
-                '@blockchainsecurityjobs',
-                '@web3security_jobs'
             ],
             
             # === INTERNATIONAL GENERAL - VERIFIED ACTIVE ===
             'international_general': [
-                '@globaljobs',
-                '@worldwideremote'
             ]
         }
         

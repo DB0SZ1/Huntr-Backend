@@ -67,21 +67,12 @@ async def perform_scan_background(
         all_opportunities = results.get("opportunities", [])
         stats = results.get("stats", {})
         
-        # APPLY TIER-BASED LIMITS from config: Free=5, Pro=8, Premium=12
-        tier_limits = {
-            "free": 5,
-            "pro": 8,
-            "premium": 12
-        }
-        max_opps = tier_limits.get(user_tier, 5)
-        opportunities = all_opportunities[:max_opps]
-        
-        logger.info(f"[SCAN] Tier {user_tier}: Limiting {len(all_opportunities)} to {len(opportunities)} opportunities")
+        logger.info(f"[SCAN] Scraper found {len(all_opportunities)} opportunities across all platforms")
         
         # Store opportunities to user_opportunities collection ONLY (single source of truth)
         now = datetime.utcnow()
         stored_count = 0
-        for opp in opportunities:
+        for opp in all_opportunities:
             try:
                 # Generate opportunity_id from scraped ID or create fallback
                 opportunity_id = opp.get("id", f"opp_{int(time.time())}_{stored_count}")
@@ -131,6 +122,17 @@ async def perform_scan_background(
         
         logger.info(f"[SCAN] Stored {stored_count} opportunities to user_opportunities for user {user_id}")
         
+        # APPLY TIER-BASED LIMITS for DISPLAY ONLY: Free=5, Pro=8, Premium=12
+        tier_limits = {
+            "free": 5,
+            "pro": 8,
+            "premium": 12
+        }
+        max_display = tier_limits.get(user_tier, 5)
+        displayed_opportunities = all_opportunities[:max_display]
+        
+        logger.info(f"[SCAN] Tier {user_tier}: Displaying {len(displayed_opportunities)}/{len(all_opportunities)} opportunities (limit: {max_display})")
+        
         # Update scan_history record with results
         await db.scan_history.update_one(
             {"scan_id": scan_id},
@@ -138,9 +140,10 @@ async def perform_scan_background(
                 "$set": {
                     "status": "completed",
                     "completed_at": datetime.utcnow(),
-                    "opportunities_found": len(opportunities),
+                    "opportunities_found": len(displayed_opportunities),
+                    "total_opportunities_found": len(all_opportunities),
                     "platforms_scanned": platforms_to_scan,
-                    "results": opportunities,
+                    "results": displayed_opportunities,
                     "stats": stats,
                     "updated_at": datetime.utcnow()
                 }
@@ -154,7 +157,8 @@ async def perform_scan_background(
                 "$set": {
                     "status": "completed",
                     "completed_at": datetime.utcnow(),
-                    "opportunities_found": len(opportunities),
+                    "opportunities_found": len(displayed_opportunities),
+                    "total_opportunities_found": len(all_opportunities),
                     "platforms_scanned": platforms_to_scan,
                     "results": opportunities,
                     "stats": stats,

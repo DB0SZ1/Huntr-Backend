@@ -25,10 +25,23 @@ async def get_user_opportunities(
     platform: str = Query(None),
     saved_only: bool = Query(False)
 ):
-    """Get opportunities for current user ONLY - from recent scans only"""
+    """Get opportunities for current user - applies tier limits to control access"""
     try:
-        # ONLY fetch opportunities that have platform and title (actual scan results)
-        # NOTE: Removed strict URL requirement to avoid filtering valid opportunities
+        # Get user tier
+        user = await db.users.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Apply tier-based limits
+        tier_limits = {
+            "free": 5,
+            "pro": 8,
+            "premium": 12
+        }
+        user_tier = user.get("tier", "free")
+        max_opportunities = tier_limits.get(user_tier, 5)
+        
+        # Query for opportunities
         query = {
             "user_id": user_id,
             "platform": {"$exists": True, "$ne": "Unknown"},
@@ -41,13 +54,15 @@ async def get_user_opportunities(
         if saved_only:
             query["is_saved"] = True
         
-        total = await db.user_opportunities.count_documents(query)
+        # Count total but limit query to tier max
+        total_count = await db.user_opportunities.count_documents(query)
+        total = min(total_count, max_opportunities)  # Cap at tier limit
         
         opportunities = await db.user_opportunities.find(query)\
             .sort("found_at", -1)\
             .skip(skip)\
-            .limit(limit)\
-            .to_list(length=limit)
+            .limit(min(limit, max_opportunities - skip))\
+            .to_list(length=min(limit, max_opportunities))
         
         # Parse and clean up opportunities for display
         parsed_opps = []
@@ -91,6 +106,8 @@ async def get_user_opportunities(
             "total": total,
             "skip": skip,
             "limit": limit,
+            "tier": user_tier,
+            "tier_limit": max_opportunities,
             "pagination": {"total": total, "skip": skip, "limit": limit},
             "opportunities": parsed_opps
         }
