@@ -37,13 +37,6 @@ SCRAPER_CONFIG = {
         'rate_limit_per_hour': 100,
         'requires_api': True
     },
-    'Reddit': {
-        'function': scrape_reddit_jobs,
-        'timeout': 45,
-        'retries': 3,
-        'rate_limit_per_hour': 300,
-        'requires_api': False
-    },
     'Web3.career': {
         'function': scrape_web3_jobs,
         'timeout': 30,

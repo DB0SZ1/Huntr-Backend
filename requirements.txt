@@ -6,13 +6,14 @@ pydantic-settings
 starlette
 cryptography
 psutil
-passlib[bcrypt]
+passlib[argon2]>=1.7.4
 PyPDF2
 itsdangerous
 
 # Database
 motor
 pymongo
+argon2-cffi
 
 # Authentication
 python-jose[cryptography]

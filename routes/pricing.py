@@ -14,7 +14,7 @@ PRICING_PLANS = {
         "description": "Perfect for getting started with gig hunting",
         "max_niches": 1,
         "scans_per_day": 2,
-        "curated_gigs_per_scan": 3,
+        "curated_gigs_per_scan": 5,
         "scan_interval_minutes": 0,
         "auto_scan_enabled": False,
         "monthly_opportunities_limit": 50,
@@ -23,14 +23,14 @@ PRICING_PLANS = {
         "features": [
             "Create 1 niche",
             "2 scans per day",
-            "3 curated gigs per scan",
+            "5 curated gigs per scan",
             "Scam detection",
             "Salary detection",
             "Manual scanning only",
             "Up to 50 opportunities/month",
             "Email notifications"
         ],
-        "platforms": ["Twitter/X", "Reddit"],
+        "platforms": ["Twitter/X", "Telegram"],
         "price_ngn": 0,
         "price_usd": 0
     },
@@ -40,7 +40,7 @@ PRICING_PLANS = {
         "description": "For serious freelancers ready to scale",
         "max_niches": 5,
         "scans_per_day": 5,
-        "curated_gigs_per_scan": 4,
+        "curated_gigs_per_scan": 8,
         "scan_interval_minutes": 90,
         "auto_scan_enabled": True,
         "monthly_opportunities_limit": 500,
@@ -49,7 +49,7 @@ PRICING_PLANS = {
         "features": [
             "Create up to 5 niches",
             "5 scans per day",
-            "4 curated gigs per scan",
+            "8 curated gigs per scan",
             "Advanced scam detection",
             "Salary detection & analysis",
             "Automatic scans every 90 minutes",
@@ -58,7 +58,7 @@ PRICING_PLANS = {
             "Email + WhatsApp notifications",
             "Priority support"
         ],
-        "platforms": ["Twitter/X", "Reddit", "Web3.career", "Telegram"],
+        "platforms": ["Twitter/X", "Web3.career", "Telegram"],
         "price_ngn": 2500,
         "price_usd": 1.50
     },
@@ -68,7 +68,7 @@ PRICING_PLANS = {
         "description": "Maximum power for elite professionals",
         "max_niches": 20,
         "scans_per_day": 10,
-        "curated_gigs_per_scan": 5,
+        "curated_gigs_per_scan": 12,
         "scan_interval_minutes": 30,
         "auto_scan_enabled": True,
         "monthly_opportunities_limit": 5000,
@@ -77,7 +77,7 @@ PRICING_PLANS = {
         "features": [
             "Create up to 20 niches",
             "10 scans per day",
-            "5 curated gigs per scan",
+            "12 curated gigs per scan",
             "Elite scam detection",
             "Advanced salary detection",
             "Automatic scans every 30 minutes",
@@ -90,7 +90,7 @@ PRICING_PLANS = {
             "Custom alerts"
         ],
         "platforms": [
-            "Twitter/X", "Reddit", "Web3.career", "Pump.fun", 
+            "Twitter/X", "Web3.career", "Pump.fun", 
             "DexScreener", "CoinMarketCap", "CoinGecko", "Telegram"
         ],
         "price_ngn": 7500,

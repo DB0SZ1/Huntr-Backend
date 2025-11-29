@@ -67,13 +67,13 @@ async def perform_scan_background(
         all_opportunities = results.get("opportunities", [])
         stats = results.get("stats", {})
         
-        # APPLY TIER-BASED LIMITS: Free=3, Pro=2, Premium=4
+        # APPLY TIER-BASED LIMITS from config: Free=5, Pro=8, Premium=12
         tier_limits = {
-            "free": 3,
-            "pro": 2,
-            "premium": 4
+            "free": 5,
+            "pro": 8,
+            "premium": 12
         }
-        max_opps = tier_limits.get(user_tier, 3)
+        max_opps = tier_limits.get(user_tier, 5)
         opportunities = all_opportunities[:max_opps]
         
         logger.info(f"[SCAN] Tier {user_tier}: Limiting {len(all_opportunities)} to {len(opportunities)} opportunities")

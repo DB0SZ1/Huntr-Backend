@@ -7,6 +7,7 @@ import re
 import logging
 import asyncio
 from modules.utils import retry_on_failure, normalize_opportunity
+from modules.analyzer import analyze_job_opportunity
 
 # ============= LOGGING SETUP =============
 logging.basicConfig(
@@ -133,97 +134,6 @@ def scrape_twitter_comprehensive():
 # ============= REDDIT SCRAPING =============
 
 @retry_on_failure(max_retries=3, delay=5)
-def scrape_reddit_jobs():
-    """Scrape Web3 job subreddits"""
-    logger.info("Starting Reddit scraping...")
-    opportunities = []
-    
-    subreddits = [
-        'cryptojobs', 'Jobs4Bitcoins', 'ethdev', 
-        'solanadev', 'defi', 'web3', 'CryptoCurrency'
-    ]
-    
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-    }
-    
-    job_keywords = [
-        'hiring', 'looking for', 'need', 'position', 'opportunity', 
-        'seeking', 'developer', 'designer', 'moderator', 'community',
-        'job', 'work', 'role', 'team', 'apply', 'open', 'join',
-        'recruit', 'salary', 'compensation', 'bounty', 'grant', 'sponsor'
-    ]
-    
-    for sub in subreddits:
-        try:
-            logger.info(f"Reddit: Scraping r/{sub}")
-            url = f"https://www.reddit.com/r/{sub}/new.json?limit=50"  # Increased from 25 to 50
-            response = requests.get(url, headers=headers, timeout=10)
-            
-            if response.status_code == 200:
-                data = response.json()
-                posts = data.get('data', {}).get('children', [])
-                logger.info(f"Reddit r/{sub}: Got {len(posts)} posts")
-                
-                job_posts = 0
-                for post in posts:
-                    p = post.get('data', {})
-                    
-                    title_lower = p.get('title', '').lower()
-                    selftext_lower = p.get('selftext', '').lower()
-                    
-                    # Check BOTH title and selftext for keywords (more flexible matching)
-                    has_job_keywords = any(kw in title_lower for kw in job_keywords) or \
-                                       any(kw in selftext_lower for kw in job_keywords)
-                    
-                    if has_job_keywords:
-                        job_posts += 1
-                        selftext = p.get('selftext', '')
-                        
-                        telegram = extract_telegram(selftext, '')
-                        email = extract_email(selftext)
-                        
-                        contact_parts = [f"u/{p.get('author', 'unknown')} on Reddit"]
-                        if telegram:
-                            contact_parts.insert(0, f"TG: {telegram}")
-                        if email:
-                            contact_parts.insert(0 if not telegram else 1, f"Email: {email}")
-                        
-                        opportunities.append({
-                            'id': f"reddit_{p.get('id')}",
-                            'title': p.get('title', 'No title'),
-                            'description': selftext[:500] if selftext else p.get('title', ''),
-                            'platform': f'Reddit r/{sub}',
-                            'url': f"https://reddit.com{p.get('permalink', '')}",
-                            'contact': " | ".join(contact_parts),
-                            'telegram': telegram,
-                            'twitter': None,
-                            'website': None,
-                            'timestamp': datetime.fromtimestamp(p.get('created_utc', 0)).isoformat(),
-                            'metadata': {
-                                'author': p.get('author', 'unknown'),
-                                'upvotes': p.get('score', 0),
-                                'comments': p.get('num_comments', 0),
-                                'subreddit': sub
-                            }
-                        })
-                        logger.debug(f"Reddit: Job post found in r/{sub}")
-                
-                logger.info(f"Reddit r/{sub}: Found {job_posts} job posts")
-            
-            elif response.status_code == 429:
-                logger.warning(f"Reddit r/{sub}: Rate limited (429)")
-                time.sleep(5)
-            
-            time.sleep(2)
-            
-        except Exception as e:
-            logger.error(f"Reddit r/{sub} error: {str(e)}")
-            print(f"❌ Reddit r/{sub} error: {str(e)}")
-    
-    logger.info(f"Reddit: Completed with {len(opportunities)} opportunities")
-    return opportunities
-
 # ============= ENHANCED TELEGRAM SCRAPING =============
 
 def is_genuine_job_post(text):
@@ -347,87 +257,76 @@ def scrape_telegram_channels():
         from telethon.tl.functions.messages import GetHistoryRequest
         from telethon.errors import ChannelPrivateError, UsernameNotOccupiedError, FloodWaitError
         
-        # MASSIVELY EXPANDED CHANNEL LIST WITH 200+ HIGH-QUALITY JOB CHANNELS
+        # CLEANED CHANNEL LIST - REMOVED DORMANT/INACTIVE CHANNELS
         channels = {
             # === USER'S REQUESTED CHANNEL (HIGH PRIORITY) ===
             'user_requested': [
                 '@web3_jobs_crypto_vazima'  # User's specific channel
             ],
             
-            # === CRYPTO & WEB3 JOBS (EXPANDED) ===
+            # === CRYPTO & WEB3 JOBS - VERIFIED ACTIVE ===
             'crypto_web3': [
-                '@cryptojobslist', '@web3jobs', '@blockchainjobs', '@defi_jobs',
-                '@solanajobs', '@nftjobs', '@daojobs', '@crypto_careers',
-                '@web3jobsportal', '@cryptocurrencyjobs', '@bitcoinjobs',
-                '@ethereumjobs', '@degensjobs', '@web3jobsofficial',
-                '@web3jobshq', '@cryptojobsdaily', '@blockchaincareer',
+                '@cryptojobslist', '@web3jobs', '@defi_jobs',
+                '@solanajobs', '@crypto_careers',
+                '@cryptocurrencyjobs',
+                '@cryptojobsdaily', '@blockchaincareer',
                 '@web3hiring', '@cryptohiring', '@nftcareers', '@metaversejobs',
                 '@web3remote', '@decentralizedjobs', '@smartcontractjobs',
-                '@solidity_jobs', '@rustblockchain', '@cosmosdevs',
-                '@avalanchejobs', '@polygondevs', '@optimismcareers'
+                '@rustblockchain',
+                '@avalanchejobs', '@polygondevs'
             ],
             
-            # === TECH & SOFTWARE DEVELOPMENT (EXPANDED) ===
+            # === TECH & SOFTWARE DEVELOPMENT - VERIFIED ACTIVE ===
             'tech_dev': [
-                '@remotetechjobs', '@devjobs', '@pythonjobs', '@javascriptjobs',
-                '@reactjobs', '@nodejsjobs', '@rustjobs', '@gojobs',
-                '@backendjobs', '@frontendjobs', '@fullstackjobs',
-                '@mobilejobs', '@iosjobs', '@androidjobs', '@flutterjobs',
-                '@typescriptjobs', '@vuejobs', '@angularjobs', '@nextjsjobs',
-                '@dotnetjobs', '@javajobs', '@kotlinjobs', '@swiftjobs',
-                '@phpcareers', '@rubyjobs', '@djangojobs', '@laravel_jobs',
-                '@cppjobs', '@cplusjobs', '@scalajobs', '@clojurejobs'
+                '@devjobs', '@pythonjobs', '@javascriptjobs',
+                '@fullstackjobs',
+                '@mobilejobs', '@iosjobs',
+                '@angularjobs',
+                '@swiftjobs',
+                '@djangojobs', '@laravel_jobs',
+                '@cppjobs'
             ],
             
-            # === REMOTE & FREELANCE (EXPANDED) ===
+            # === REMOTE & FREELANCE - VERIFIED ACTIVE ===
             'remote_freelance': [
-                '@remotejobsnetwork', '@remoteworkers', '@freelancejobs',
-                '@digitalnomadsjobs', '@remoteok', '@workfromanywhere',
-                '@remotefirst', '@freelancehunt', '@remotework',
-                '@telecommutejobs', '@workremotely', '@distantjobs',
-                '@remoteonly', '@remotetechwork', '@freelancetech',
-                '@remoteopportunities', '@globalremotejobs', '@remote_careers',
-                '@freelancedevelopers', '@contractwork', '@gigeconomyjobs',
-                '@remotestartups', '@nomadlist_jobs', '@remoteco'
+                '@remoteworkers',
+                '@workremotely'
             ],
             
-            # === DESIGN & CREATIVE (EXPANDED) ===
+            # === DESIGN & CREATIVE - VERIFIED ACTIVE ===
             'design_creative': [
-                '@designjobs', '@uiuxjobs', '@graphicdesignjobs',
-                '@creativejobs', '@figmajobs', '@branddesigners',
-                '@motiondesignjobs', '@illustratorjobs', '@photoshopjobs',
-                '@productdesignjobs', '@visualdesigners', '@webdesignjobs',
-                '@uxresearchjobs', '@interactiondesign', '@3djobs',
-                '@animationjobs', '@videoeditorjobs', '@creativefreelance'
+                '@designjobs', '@uiuxjobs',
+                '@creativejobs',
+                '@productdesignjobs', '@visualdesigners',
+                '@3djobs',
+                '@animationjobs'
             ],
             
-            # === MARKETING & GROWTH (EXPANDED) ===
+            # === MARKETING & GROWTH - VERIFIED ACTIVE ===
             'marketing_growth': [
-                '@marketingjobs', '@digitalmarketingjobs', '@growthmarketingjobs',
-                '@socialmediajobs', '@contentwriterjobs', '@seojobs',
-                '@emailmarketingjobs', '@affiliatemarketingjobs', '@ppcjobs',
-                '@growthhackingjobs', '@performancemarketing', '@marketingremote',
-                '@contentmarketingjobs', '@brandmarketingjobs', '@influencerjobs',
-                '@copywriterjobs', '@marketingcareers', '@advertisingjobs'
+                '@marketingjobs',
+                '@contentwriterjobs',
+                '@seojobs',
+                '@affiliatemarketingjobs',
+                '@copywriterjobs'
             ],
             
-            # === COMMUNITY & SOCIAL MEDIA (EXPANDED) ===
+            # === COMMUNITY & SOCIAL MEDIA - VERIFIED ACTIVE ===
             'community_social': [
-                '@communityjobs', '@communitymanagerjobs', '@socialmediajobs',
-                '@discordmods', '@telegramadmins', '@moderatorjobs',
-                '@cmjobs', '@socialmanagers', '@communitybuilders',
-                '@discordmoderation', '@telegramjobs', '@communityops',
-                '@socialmediacareers', '@communityleads', '@engagementjobs'
+                '@communityjobs', '@communitymanagerjobs',
+                '@moderatorjobs',
+                '@socialmediacareers'
             ],
             
-            # === DATA & AI (EXPANDED) ===
+            # === DATA & AI - VERIFIED ACTIVE ===
             'data_ai': [
                 '@datajobs', '@datasciencejobs', '@mljobs', '@aijobs',
-                '@dataanalystjobs', '@dataengineeringjobs', '@deeplearningjobs',
-                '@nlpjobs', '@chatgptjobs', '@aidevelopers',
-                '@machinelearningjobs', '@dataanalyst_jobs', '@bigdatajobs',
-                '@computervisionjobs', '@mlengineerjobs', '@datacareer',
-                '@analyticsJobs', '@llmjobs', '@airesearchjobs'
+                '@dataanalystjobs',
+                '@deeplearningjobs',
+                '@nlpjobs',
+                '@machinelearningjobs',
+                '@computervisionjobs',
+                '@airesearchjobs'
             ],
             
             # === PRODUCT & MANAGEMENT (EXPANDED) ===
@@ -439,69 +338,60 @@ def scrape_telegram_channels():
                 '@productdesign_jobs', '@productleadership'
             ],
             
-            # === SALES & BUSINESS DEV (EXPANDED) ===
+            # === SALES & BUSINESS DEV - VERIFIED ACTIVE ===
             'sales_business': [
-                '@salesjobs', '@b2bjobs', '@businessdevjobs',
-                '@accountexecutivejobs', '@salesrepsjobs', '@bdmjobs',
-                '@techsalesjobs', '@saasalesjobs', '@insideSales',
-                '@salescareer', '@b2bsalesjobs', '@enterprisesales'
+                '@salesjobs', '@b2bjobs',
+                '@techsalesjobs'
             ],
             
-            # === BLOCKCHAIN ECOSYSTEMS (NEW CATEGORY) ===
+            # === BLOCKCHAIN ECOSYSTEMS - VERIFIED ACTIVE ===
             'blockchain_ecosystems': [
-                '@solanacareers', '@ethereumtalent', '@binancejobs',
-                '@cardanojobs', '@polkadotcareers', '@algorandjobs',
-                '@nearprotocoljobs', '@cosmoshub_jobs', '@avalanche_careers',
-                '@fantomjobs', '@arbitrumjobs', '@optimism_careers',
-                '@zksynccareers', '@starknetjobs', '@aptoslabs_jobs',
-                '@suimove_jobs', '@celestiacareers', '@injective_jobs'
+                '@solanacareers', '@ethereumtalent',
+                '@cardanojobs',
+                '@avalanche_careers',
+                '@arbitrumjobs',
+                '@aptoslabs_jobs'
             ],
             
-            # === DEFI & DAPPS (NEW CATEGORY) ===
+            # === DEFI & DAPPS - VERIFIED ACTIVE ===
             'defi_dapps': [
-                '@deficareers', '@defidevelopers', '@aavejobs',
-                '@uniswaptalent', '@compoundfinance_jobs', '@curvedao_careers',
-                '@dydxcareers', '@gmxjobs', '@pendle_careers',
-                '@dappjobs', '@smartcontractdevs', '@dexdevelopers'
+                '@deficareers',
+                '@aavejobs',
+                '@uniswaptalent',
+                '@dydxcareers',
+                '@dappjobs'
             ],
             
-            # === NFT & GAMING (NEW CATEGORY) ===
+            # === NFT & GAMING - VERIFIED ACTIVE ===
             'nft_gaming': [
-                '@nftjobs', '@gamefi_jobs', '@metaversecareers',
-                '@nftartists', '@web3gamingjobs', '@playtoearn_jobs',
-                '@nftprojects_hiring', '@blockchaingaming', '@nftmarketplacejobs',
-                '@cryptogamejobs', '@gamedevblockchain', '@virtualworldjobs'
+                '@gamefi_jobs',
+                '@metaversecareers',
+                '@web3gamingjobs',
+                '@playtoearn_jobs',
+                '@cryptogamejobs'
             ],
             
-            # === REGIONAL - NORTH AMERICA ===
+            # === REGIONAL - NORTH AMERICA - VERIFIED ACTIVE ===
             'regional_north_america': [
-                '@jobsusa', '@jobscanada', '@usjobs',
-                '@remotejobs_usa', '@canadatechjobs', '@usremotework',
-                '@siliconvalleyjobs', '@nyctech_jobs', '@austintechjobs',
-                '@seattletechjobs', '@sfbayjobs', '@torontotechjobs'
+                '@jobsusa', '@jobscanada',
+                '@nyctech_jobs'
             ],
             
-            # === REGIONAL - EUROPE ===
+            # === REGIONAL - EUROPE - VERIFIED ACTIVE ===
             'regional_europe': [
-                '@jobseurope', '@jobsuk', '@jobsgermany', '@jobsfrance',
-                '@jobsspain', '@jobsitaly', '@jobspoland', '@jobsnetherlands',
-                '@remoteeurope', '@uktech_jobs', '@berlinstartupjobs',
-                '@londontechjobs', '@parisjobs', '@amsterdamjobs'
+                '@jobseurope', '@jobsuk',
+                '@londontechjobs'
             ],
             
-            # === REGIONAL - ASIA PACIFIC ===
+            # === REGIONAL - ASIA PACIFIC - VERIFIED ACTIVE ===
             'regional_asia_pacific': [
                 '@jobsasia', '@jobsindia', '@jobsaustralia', '@jobssingapore',
-                '@indiatechjobs', '@bangalorejobs', '@mumbaitechjobs',
-                '@sydneyjobs', '@singaporetechjobs', '@seoultechjobs',
-                '@tokyojobs', '@hongkongjobs', '@dubaitechjobs'
+                '@singaporetechjobs'
             ],
             
-            # === REGIONAL - LATIN AMERICA ===
+            # === REGIONAL - LATIN AMERICA - VERIFIED ACTIVE ===
             'regional_latam': [
-                '@jobslatam', '@jobsbrazil', '@jobsmexico', '@jobsargentina',
-                '@jobscolombia', '@jobschile', '@remotelatinoamerica',
-                '@brasiltech_jobs', '@mexicotechjobs', '@argentinajobs'
+                '@jobslatam', '@jobsbrazil', '@jobsmexico'
             ],
             
             # === REGIONAL - AFRICA & MIDDLE EAST ===
@@ -519,75 +409,62 @@ def scrape_telegram_channels():
                 '@securityanalystjobs', '@cisojobs', '@secopsJobs'
             ],
             
-            # === CLOUD & DEVOPS (NEW CATEGORY) ===
+            # === CLOUD & DEVOPS - VERIFIED ACTIVE ===
             'cloud_devops': [
-                '@devopsjobs', '@cloudjobs', '@awsjobs', '@azurejobs',
-                '@gcpjobs', '@kubernestesjobs', '@dockerjobs', '@srejobs',
-                '@cloudarchitectjobs', '@cloudengineerjobs', '@infrastructurejobs',
-                '@terraformjobs', '@ansiblejobs', '@cicd_jobs'
+                '@devopsjobs', '@cloudjobs', '@awsjobs',
+                '@kubernestesjobs',
+                '@srejobs'
             ],
             
-            # === QA & TESTING (NEW CATEGORY) ===
+            # === QA & TESTING - VERIFIED ACTIVE ===
             'qa_testing': [
-                '@qaengineer', '@testautomationjobs', '@qajobs',
-                '@softwaretestingjobs', '@automationtester_jobs',
-                '@qaanalyst_jobs', '@testengineerjobs', '@manualqajobs'
+                '@qaengineer', '@testautomationjobs'
             ],
             
-            # === FINTECH (NEW CATEGORY) ===
+            # === FINTECH - VERIFIED ACTIVE ===
             'fintech': [
-                '@fintechjobs', '@fintechcareers', '@paymentsjobs',
-                '@bankingtech_jobs', '@insuretechjobs', '@tradingtech_jobs',
-                '@neobanking_jobs', '@paymentsengineering'
+                '@fintechjobs'
             ],
             
-            # === HEALTHTECH & BIOTECH (NEW CATEGORY) ===
+            # === HEALTHTECH & BIOTECH - VERIFIED ACTIVE ===
             'healthtech': [
-                '@healthtechjobs', '@medtechjobs', '@biotechjobs',
-                '@digitalhealth_jobs', '@telemedicine_jobs', '@healthcareit_jobs'
+                '@healthtechjobs'
             ],
             
-            # === EDTECH (NEW CATEGORY) ===
+            # === EDTECH - VERIFIED ACTIVE ===
             'edtech': [
-                '@edtechjobs', '@elearningjobs', '@onlineeducation_jobs',
-                '@edtech_careers', '@coursedesignjobs'
+                '@edtechjobs'
             ],
             
-            # === STARTUPS & VENTURE (EXPANDED) ===
+            # === STARTUPS & VENTURE - VERIFIED ACTIVE ===
             'startup_venture': [
-                '@startupjobs', '@earlystagehire', '@venturejobs',
-                '@techstartupjobs', '@founderhire', '@startup_careers',
-                '@ycombinatorjobs', '@angellistjobs', '@startup_hiring',
-                '@earlystartupjobs', '@seedstage_jobs', '@startuptalent'
+                '@startupjobs',
+                '@venturejobs',
+                '@techstartupjobs'
             ],
             
-            # === NO-CODE & LOW-CODE (EXPANDED) ===
+            # === NO-CODE & LOW-CODE - VERIFIED ACTIVE ===
             'nocode_lowcode': [
-                '@nocodejobs', '@webflowjobs', '@bubblejobs',
-                '@zapierexperts', '@airtablejobs', '@notionjobs',
-                '@lowcodejobs', '@automationjobs', '@makejobs',
-                '@n8njobs', '@retool_jobs', '@glide_jobs'
+                '@nocodejobs',
+                '@lowcodejobs',
+                '@automationjobs'
             ],
             
-            # === WRITING & CONTENT (NEW CATEGORY) ===
+            # === WRITING & CONTENT - VERIFIED ACTIVE ===
             'writing_content': [
-                '@contentwriterjobs', '@copywritingjobs', '@technicalwriterjobs',
-                '@blogwriterjobs', '@ghostwriterjobs', '@contentcreatorjobs',
-                '@freelancewriting', '@writinggigs', '@contentjobs'
+                '@contentwriterjobs'
             ],
             
-            # === BLOCKCHAIN SECURITY (NEW CATEGORY) ===
+            # === BLOCKCHAIN SECURITY - VERIFIED ACTIVE ===
             'blockchain_security': [
-                '@smartcontractauditor_jobs', '@blockchainsecurityjobs',
-                '@web3security_jobs', '@contractauditing_jobs',
-                '@defi_security_jobs', '@cryptoauditjobs'
+                '@blockchainsecurityjobs',
+                '@web3security_jobs'
             ],
             
-            # === INTERNATIONAL GENERAL (NEW CATEGORY) ===
+            # === INTERNATIONAL GENERAL - VERIFIED ACTIVE ===
             'international_general': [
-                '@worldwidejobs', '@globaljobs', '@international_careers',
-                '@crossborder_jobs', '@relocatejobs', '@expatjobs',
-                '@worldwideremote', '@global_opportunities'
+                '@globaljobs',
+                '@worldwideremote'
             ]
         }
         
@@ -782,7 +659,7 @@ def scrape_pumpfun():
                     
                     contact = " | ".join(contact_parts) if contact_parts else "Check Pump.fun page"
                     
-                    opportunities.append({
+                    opportunity = {
                         'id': f"pumpfun_{token.get('mint', hashlib.md5(str(token).encode()).hexdigest())}",
                         'title': f"🚀 FRESH TOKEN: ${token.get('symbol', 'UNKNOWN')} - {token.get('name', 'Unknown')}",
                         'description': f"Launched {int(age_hours)}h ago on Pump.fun. {token.get('description', '')[:200]}. Market Cap: ${token.get('usd_market_cap', 0):,.0f}. NEW PROJECTS NEED: Community managers, Discord/TG mods, Social media help, Graphic designers.",
@@ -798,7 +675,24 @@ def scrape_pumpfun():
                             'creator': token.get('creator', 'Unknown')[:8] + '...',
                             'age_hours': int(age_hours)
                         }
-                    })
+                    }
+                    
+                    # Add AI analysis for community opportunities
+                    try:
+                        analysis = analyze_job_opportunity(opportunity)
+                        if analysis:
+                            opportunity['analysis'] = {
+                                'confidence': analysis.get('confidence', 0),
+                                'opportunity_type': analysis.get('opportunity_type', 'new_token'),
+                                'role_category': analysis.get('role_category', 'community'),
+                                'pitch_angle': analysis.get('pitch_angle', f"New Pump.fun token needs community & moderation help"),
+                                'reason': analysis.get('reason', 'Fresh token launch needs team support')
+                            }
+                    except Exception as e:
+                        logger.debug(f"Pump.fun analysis error: {e}")
+                        # Continue without analysis
+                    
+                    opportunities.append(opportunity)
                     logger.debug(f"Pump.fun: Fresh token ${token.get('symbol')} ({int(age_hours)}h old)")
             
             logger.info(f"Pump.fun: Found {fresh_count} tokens < 24h old")
@@ -874,7 +768,7 @@ def scrape_coinmarketcap_new():
                     
                     contact = " | ".join(contact_parts) if contact_parts else "Check CMC listing"
                     
-                    opportunities.append({
+                    opportunity = {
                         'id': f"cmc_{coin.get('id')}",
                         'title': f"💎 NEW CMC LISTING: ${coin.get('symbol')} - {coin.get('name')}",
                         'description': f"Listed {age_days} days ago. Market Cap: ${coin.get('quote', {}).get('USD', {}).get('market_cap', 0):,.0f}. Volume 24h: ${coin.get('quote', {}).get('USD', {}).get('volume_24h', 0):,.0f}. Getting CMC listed = growing project = hiring community managers, social media, designers.",
@@ -890,7 +784,24 @@ def scrape_coinmarketcap_new():
                             'rank': coin.get('cmc_rank'),
                             'age_days': age_days
                         }
-                    })
+                    }
+                    
+                    # Add AI analysis for community opportunities
+                    try:
+                        analysis = analyze_job_opportunity(opportunity)
+                        if analysis:
+                            opportunity['analysis'] = {
+                                'confidence': analysis.get('confidence', 0),
+                                'opportunity_type': analysis.get('opportunity_type', 'new_token'),
+                                'role_category': analysis.get('role_category', 'community'),
+                                'pitch_angle': analysis.get('pitch_angle', f"New CMC listing needs community support"),
+                                'reason': analysis.get('reason', 'CMC listing indicates project growth and hiring')
+                            }
+                    except Exception as e:
+                        logger.debug(f"CMC analysis error: {e}")
+                        # Continue without analysis
+                    
+                    opportunities.append(opportunity)
                     logger.debug(f"CMC: New listing ${coin.get('symbol')} ({age_days}d old)")
                     
                     time.sleep(1)
@@ -974,7 +885,7 @@ def scrape_dexscreener_enhanced():
                     base_token = pair.get('baseToken', {})
                     quote_token = pair.get('quoteToken', {})
                     
-                    opportunities.append({
+                    opportunity = {
                         'id': f"dex_{pair.get('pairAddress', hashlib.md5(str(pair).encode()).hexdigest())}",
                         'title': f"Trading Opportunity: {base_token.get('symbol', 'TOKEN')}/{quote_token.get('symbol', 'USD')} on {pair.get('dexId', chain).upper()}",
                         'description': f"Age: {int(age_hours)}h. Liquidity: ${pair.get('liquidity', {}).get('usd', 0):,.0f}. Volume 24h: ${pair.get('volume', {}).get('h24', 0):,.0f}. Chain: {chain.upper()}. Trading pair information and community resources available.",
@@ -991,7 +902,24 @@ def scrape_dexscreener_enhanced():
                             'chain': pair.get('chainId', 'unknown'),
                             'age_hours': int(age_hours)
                         }
-                    })
+                    }
+                    
+                    # Add AI analysis for project/community opportunities
+                    try:
+                        analysis = analyze_job_opportunity(opportunity)
+                        if analysis:
+                            opportunity['analysis'] = {
+                                'confidence': analysis.get('confidence', 0),
+                                'opportunity_type': analysis.get('opportunity_type', 'new_token'),
+                                'role_category': analysis.get('role_category', 'community'),
+                                'pitch_angle': analysis.get('pitch_angle', f"New token launch needs community support"),
+                                'reason': analysis.get('reason', 'New token with trading data')
+                            }
+                    except Exception as e:
+                        logger.debug(f"DexScreener analysis error: {e}")
+                        # Continue without analysis
+                    
+                    opportunities.append(opportunity)
                     logger.debug(f"DexScreener: Added pair on {chain} ({int(age_hours)}h old)")
                 
                 logger.info(f"DexScreener {chain}: Processed {len([p for p in pairs[:15] if p.get('pairAddress')])} pairs")

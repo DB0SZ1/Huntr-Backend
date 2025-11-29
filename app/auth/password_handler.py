@@ -1,6 +1,6 @@
 """
 Password hashing and verification utilities
-Uses bcrypt for secure password storage
+Uses argon2 for secure password storage (no 72-byte limitation like bcrypt)
 """
 from passlib.context import CryptContext
 from passlib.exc import InvalidTokenError
@@ -10,11 +10,10 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Password hashing context
+# Password hashing context - using argon2 (no 72-byte limit)
 pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto",
-    bcrypt__rounds=12
+    schemes=["argon2"],
+    deprecated="auto"
 )
 
 # Token serializer for email verification and password reset
@@ -25,47 +24,19 @@ class PasswordHandler:
     """Handle password operations"""
     
     @staticmethod
-    def _truncate_to_72_bytes(password: str) -> str:
-        """
-        Truncate password to exactly 72 bytes for bcrypt
-        Handles multi-byte UTF-8 characters correctly
-        """
-        password_bytes = password.encode('utf-8')
-        if len(password_bytes) <= 72:
-            return password
-        
-        # Truncate to 72 bytes, then decode back to string
-        # Handle potential UTF-8 character boundaries
-        truncated = password_bytes[:72]
-        
-        # Try to decode; if it fails, keep removing bytes until valid
-        while len(truncated) > 0:
-            try:
-                return truncated.decode('utf-8')
-            except UnicodeDecodeError:
-                truncated = truncated[:-1]
-        
-        # Fallback (should never reach here)
-        return password[:50]
-    
-    @staticmethod
     def hash_password(password: str) -> str:
-        """Hash a password with bcrypt (handles 72-byte limit)"""
+        """Hash a password with argon2"""
         try:
-            # Truncate to 72 bytes
-            truncated_password = PasswordHandler._truncate_to_72_bytes(password)
-            return pwd_context.hash(truncated_password)
+            return pwd_context.hash(password)
         except Exception as e:
             logger.error(f"Password hashing error: {str(e)}")
             raise
     
     @staticmethod
     def verify_password(plain_password: str, hashed_password: str) -> bool:
-        """Verify a password against hash (handles 72-byte bcrypt limit)"""
+        """Verify a password against hash"""
         try:
-            # Truncate to 72 bytes to match hash_password behavior
-            truncated_password = PasswordHandler._truncate_to_72_bytes(plain_password)
-            return pwd_context.verify(truncated_password, hashed_password)
+            return pwd_context.verify(plain_password, hashed_password)
         except Exception as e:
             logger.error(f"Password verification error: {str(e)}")
             return False
