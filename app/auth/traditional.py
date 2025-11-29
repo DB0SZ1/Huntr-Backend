@@ -157,17 +157,21 @@ async def signup(
             logger.warning(f"Failed to send verification email: {str(e)}")
             email_sent = False
         
-        # Create default free subscription
-        await db.subscriptions.insert_one({
-            "user_id": user_id,
-            "tier": "free",
-            "status": "active",
-            "payment_method": None,
-            "paystack_subscription_id": None,
-            "current_period_start": datetime.utcnow(),
-            "current_period_end": datetime.utcnow() + timedelta(days=365),
-            "created_at": datetime.utcnow()
-        })
+        # Create default free subscription - only if one doesn't exist
+        existing_subscription = await db.subscriptions.find_one({"user_id": user_id})
+        if not existing_subscription:
+            subscription_doc = {
+                "user_id": user_id,
+                "tier": "free",
+                "status": "active",
+                "payment_method": None,
+                "current_period_start": datetime.utcnow(),
+                "current_period_end": datetime.utcnow() + timedelta(days=365),
+                "created_at": datetime.utcnow()
+            }
+            # Only include paystack_subscription_id if it has a value
+            # This avoids unique index constraint violations on null values
+            await db.subscriptions.insert_one(subscription_doc)
         
         logger.info(f"New user registered: {data.email} (ID: {user_id})")
         
