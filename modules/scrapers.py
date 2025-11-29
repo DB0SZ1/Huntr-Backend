@@ -311,17 +311,25 @@ def is_genuine_job_post(text):
 def scrape_telegram_channels():
     """
     ENHANCED: Monitor 200+ Telegram job channels globally with smart filtering
-    ✅ FIXED FOR RENDER: Creates event loop in thread context for Telethon sync client
+    ✅ FIXED FOR RENDER: Uses pre-generated session file, no interactive login needed
     """
     logger.info("Starting ENHANCED Telegram scraping...")
     opportunities = []
     
     api_id = os.getenv('TELEGRAM_API_ID')
     api_hash = os.getenv('TELEGRAM_API_HASH')
+    phone = os.getenv('TELEGRAM_PHONE')  # Add phone to env vars
     
     if not api_id or not api_hash:
         logger.warning("Telegram API not configured - skipping")
         print("⚠️  Telegram API not configured - skipping")
+        return opportunities
+    
+    # Check if session file exists
+    session_file = 'job_bot_session.session'
+    if not os.path.exists(session_file):
+        logger.error(f"❌ Session file '{session_file}' not found. Run generate_session.py locally first!")
+        print(f"❌ Session file missing. Please run 'python generate_session.py' locally, then upload the .session file to Render.")
         return opportunities
     
     try:

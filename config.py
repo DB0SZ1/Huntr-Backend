@@ -127,7 +127,7 @@ TIER_LIMITS = {
             "Up to 50 opportunities/month",
             "Email notifications"
         ],
-        "platforms": ["Twitter/X", "Reddit, Telegram"],
+        "platforms": ["Twitter/X",  "Telegram"],
         "price_ngn": 0,
     },
     "pro": {
@@ -151,7 +151,7 @@ TIER_LIMITS = {
             "Email + WhatsApp notifications",
             "Priority support"
         ],
-        "platforms": ["Twitter/X", "Reddit", "Web3.career", "Telegram"],
+        "platforms": ["Twitter/X", "Web3.career", "Telegram"],
         "price_ngn": 2500,
     },
     "premium": {
@@ -178,7 +178,7 @@ TIER_LIMITS = {
             "Advanced analytics",
             "Custom alerts"
         ],
-        "platforms": ["Twitter/X", "Reddit", "Web3.career", "Pump.fun", "DexScreener", "CoinMarketCap", "CoinGecko", "Telegram"],
+        "platforms": ["Twitter/X", "Web3.career", "Pump.fun", "DexScreener", "CoinMarketCap", "CoinGecko", "Telegram"],
         "price_ngn": 7500,
     }
 }
@@ -226,11 +226,6 @@ PLATFORM_CONFIGS = {
     'Twitter/X': {
         'enabled': True,
         'requires_api_key': True,
-        'free_tier': True
-    },
-    'Reddit': {
-        'enabled': True,
-        'requires_api_key': False,
         'free_tier': True
     },
     'Web3.career': {
